@@ -15,7 +15,6 @@ from pathlib import Path
 BASE = os.environ.get("UEX_BASE", "https://api.uexcorp.space/2.0")
 TOKEN = os.environ.get("UEX_TOKEN", "")
 OUT = Path(os.environ.get("OUT_DIR", "site/data"))
-TOP = 5
 
 # Campos de commodities_prices_all (confirmados con datos reales el 2026-11-20).
 # Confirmado con datos reales: scu_sell = demanda actual (0 = el terminal no compra ahora).
@@ -95,8 +94,6 @@ def build(prices, where):
             e["status"] = g(p, "status_buy")
         else:
             e["demand"] = g(p, "demand_sell")
-            e["stock"] = g(p, "stock_sell")
-            e["avg"] = g(p, "avg_sell")
             e["status"] = g(p, "status_sell")
         e["max_container"] = loc.get("max_container")
         return e
@@ -111,16 +108,15 @@ def build(prices, where):
     for name, recs in by.items():
         buys = [entry(p, "buy") for p in recs
                 if (g(p, "price_buy") or 0) > 0 and positive_or_unknown(g(p, "stock_buy"))]
-        sells = [entry(p, "sell") for p in recs if (g(p, "price_sell") or 0) > 0]
-        for s in sells:
-            s["no_demand"] = s["demand"] == 0
+        # Se guardan TODAS las opciones utilizables (no solo las 5 mejores): la web
+        # filtra por antigudad y sistema, y los datos frescos no suelen ser los mejores.
+        sells = [entry(p, "sell") for p in recs
+                 if (g(p, "price_sell") or 0) > 0 and positive_or_unknown(g(p, "demand_sell"))]
         buys.sort(key=lambda e: e["price"])
-        sells.sort(key=lambda e: (e["no_demand"], -e["price"]))
-        buys, sells = buys[:TOP], sells[:TOP]
+        sells.sort(key=lambda e: -e["price"])
         margin = None
-        with_demand = [s for s in sells if not s["no_demand"]]
-        if buys and with_demand and buys[0]["terminal"] != with_demand[0]["terminal"]:
-            margin = round(with_demand[0]["price"] - buys[0]["price"], 2)
+        if buys and sells and buys[0]["terminal"] != sells[0]["terminal"]:
+            margin = round(sells[0]["price"] - buys[0]["price"], 2)
         items.append({"name": name, "buy": buys, "sell": sells, "margin_per_scu": margin})
     items.sort(key=lambda i: -(i["margin_per_scu"] if i["margin_per_scu"] is not None else -1e18))
 
