@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SC HUB · Comercio</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060b11;--panel:#0f1b25;--line:#1a3544;--txt:#d6e4ee;--mut:#8aa0b2;--cy:#3fd6e8;--gr:#4fd68a;--am:#ffb43a;--rd:#ff6b5e}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 80% 0,rgba(122,77,255,.12),transparent 40%),radial-gradient(circle at 10% 90%,rgba(63,214,232,.09),transparent 40%),var(--bg);color:var(--txt);font-family:'Chakra Petch',system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:20px}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--cy);box-shadow:0 8px 20px -14px var(--cy)}
+.logo{font-size:20px;font-weight:700;letter-spacing:.14em;color:var(--cy);text-shadow:0 0 14px var(--cy)}
+.info{margin-left:auto;font-size:13px;color:var(--mut)}
+.info b{font-family:'JetBrains Mono',monospace;color:var(--txt)}
+h1{margin:22px 0 6px;font-size:34px;text-shadow:0 0 24px rgba(63,214,232,.4)}
+.sub{margin:0 0 18px;color:var(--mut)}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:18px}
+label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+input,select{height:44px;padding:0 12px;background:#08111a;border:1px solid #1d5b69;border-radius:6px;color:var(--txt);font-family:inherit;font-size:15px}
+input:focus,select:focus{outline:2px solid var(--cy)}
+.card{background:linear-gradient(180deg,#0f1b25,#0a131b);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th{padding:11px 12px;text-align:left;font:600 11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);background:rgba(63,214,232,.07);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid #16303d;font-size:14px;vertical-align:top}
+tr:first-child td{background:rgba(63,214,232,.08)}
+.n{font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.m{color:var(--mut);font-size:12px}
+.g{color:var(--gr)}.a{color:var(--am)}.r{color:var(--rd)}
+.empty{padding:30px;text-align:center;color:var(--mut)}
+footer{margin:22px 0;color:var(--mut);font-size:12px;line-height:1.6}
+a{color:var(--cy)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><span class="logo">SC HUB</span><span class="info" id="info">Cargando…</span></div>
+<h1>Comercio</h1>
+<p class="sub">Mejor terminal para comprar, mejor para vender, y cuántos SCU puedes mover de verdad.</p>
+<div class="filters">
+<div><label for="scu">Capacidad (SCU)</label><input id="scu" inputmode="numeric" value="96" style="width:120px"></div>
+<div><label for="cash">Capital (aUEC)</label><input id="cash" inputmode="numeric" placeholder="sin límite" style="width:160px"></div>
+<div><label for="sys">Sistema</label><select id="sys"><option value="">Todos</option></select></div>
+<div><label for="age">Antigüedad máx.</label><select id="age"><option value="1">1 hora</option><option value="6">6 horas</option><option value="24" selected>24 horas</option><option value="72">3 días</option><option value="1000000">Cualquiera</option></select></div>
+<div><label for="sort">Ordenar por</label><select id="sort"><option value="total">Beneficio total</option><option value="per">Beneficio por SCU</option></select></div>
+</div>
+<section class="card"><div class="scroll" id="out"><p class="empty">Cargando datos…</p></div></section>
+<footer>Web no oficial de la comunidad. Star Citizen es una marca de Cloud Imperium Rights LLC. Los precios provienen de <a href="https://uexcorp.space" target="_blank" rel="noopener">UEX Corp</a> y los aportan los jugadores: fíjate siempre en la antigüedad del dato.</footer>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 0});
+const num = v => { const d = String(v).replace(/\D/g, ''); return d ? Number(d) : 0; };
+function load(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+let DATA, META, EXTRA = 0;
+
+function ageOf(e) { return e.age_h == null ? Infinity : e.age_h + EXTRA; }
+function ageText(h) {
+  if (!isFinite(h)) return 'sin fecha';
+  if (h < 1) return Math.max(1, Math.round(h * 60)) + ' min';
+  if (h < 48) return Math.round(h) + ' h';
+  return Math.round(h / 24) + ' d';
+}
+function where(e) { return esc(e.terminal) + '<div class="m">' + esc([e.place, e.system].filter(Boolean).join(' · ')) + '</div>'; }
+
+function render() {
+  const cap = num($('scu').value), cash = num($('cash').value) || Infinity;
+  const maxAge = Number($('age').value), sys = $('sys').value, sort = $('sort').value;
+  ['scu','cash','age','sort','sys'].forEach(k => save('sch_' + k, $(k).value));
+  const ok = e => (!sys || e.system === sys) && ageOf(e) <= maxAge;
+  const routes = [];
+  for (const c of DATA.commodities) {
+    let best = null;
+    for (const b of c.buy.filter(ok)) for (const s of c.sell.filter(ok)) {
+      if (s.no_demand || b.terminal === s.terminal) continue;
+      const per = s.price - b.price;
+      if (per <= 0) continue;
+      const scu = Math.min(cap, b.scu == null ? cap : b.scu, s.demand == null ? cap : s.demand, Math.floor(cash / b.price));
+      if (scu <= 0) continue;
+      const r = {name: c.name, b, s, per, scu, total: per * scu, age: Math.max(ageOf(b), ageOf(s))};
+      if (!best || r[sort] > best[sort]) best = r;
+    }
+    if (best) routes.push(best);
+  }
+  routes.sort((x, y) => y[sort] - x[sort]);
+  if (!routes.length) { $('out').innerHTML = '<p class="empty">No hay rutas con estos filtros. Prueba a ampliar la antigüedad de los datos o a cambiar de sistema.</p>'; return; }
+  $('out').innerHTML = '<table><thead><tr><th>Mercancía</th><th>Comprar en (más barato)</th><th>Stock</th><th>Vender en (más caro)</th><th>Demanda</th><th>SCU a cargar</th><th>Por SCU</th><th>Total</th><th>Dato</th></tr></thead><tbody>' +
+    routes.slice(0, 100).map(r => {
+      const cls = r.age < 1 ? 'g' : r.age < 24 ? 'a' : 'r';
+      return '<tr><td><b>' + esc(r.name) + '</b></td><td>' + where(r.b) + '<div class="n m">' + fmt(r.b.price) + ' /SCU</div></td><td class="n">' + (r.b.scu == null ? '?' : fmt(r.b.scu)) + '</td><td>' + where(r.s) + '<div class="n m">' + fmt(r.s.price) + ' /SCU</div></td><td class="n">' + (r.s.demand == null ? '?' : fmt(r.s.demand)) + '</td><td class="n">' + fmt(r.scu) + '</td><td class="n g">+ ' + fmt(r.per) + '</td><td class="n g"><b>' + fmt(r.total) + '</b></td><td class="' + cls + '">● ' + ageText(r.age) + '</td></tr>';
+    }).join('') + '</tbody></table>';
+}
+
+async function init() {
+  try {
+    const [a, b] = await Promise.all([fetch('data/commodities.json', {cache: 'no-store'}), fetch('data/meta.json', {cache: 'no-store'})]);
+    if (!a.ok || !b.ok) throw new Error('HTTP');
+    DATA = await a.json(); META = await b.json();
+  } catch (e) {
+    $('out').innerHTML = '<p class="empty">No se pudieron cargar los datos. Inténtalo de nuevo en unos minutos.</p>';
+    $('info').textContent = 'Sin datos';
+    return;
+  }
+  EXTRA = Math.max(0, (Date.now() - Date.parse(META.generated_at)) / 36e5);
+  const systems = new Set();
+  DATA.commodities.forEach(c => c.buy.concat(c.sell).forEach(e => e.system && systems.add(e.system)));
+  [...systems].sort().forEach(s => $('sys').insertAdjacentHTML('beforeend', '<option>' + esc(s) + '</option>'));
+  ['scu','cash','age','sort','sys'].forEach(k => { const v = load('sch_' + k, null); if (v !== null) $(k).value = v; });
+  ['scu','cash'].forEach(k => $(k).addEventListener('input', render));
+  ['age','sort','sys'].forEach(k => $(k).addEventListener('change', render));
+  const v = META.game_versions && META.game_versions.live;
+  $('info').innerHTML = (v ? 'Parche <b>' + esc(v) + '</b> · ' : '') + 'datos de hace <b>' + ageText(EXTRA) + '</b> · <b>' + (META.fresh_under_24h_percent == null ? '?' : META.fresh_under_24h_percent) + '%</b> de los precios, de menos de 24 h';
+  render();
+}
+init();
+</script>
+</body>
+</html>
