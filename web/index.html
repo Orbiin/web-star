@@ -32,19 +32,25 @@ tr:first-child td{background:rgba(63,214,232,.08)}
 .empty{padding:30px;text-align:center;color:var(--mut)}
 footer{margin:22px 0;color:var(--mut);font-size:12px;line-height:1.6}
 a{color:var(--cy)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.tab{min-height:44px;padding:0 20px;background:#0d1a24;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;font-family:inherit;font-size:15px;cursor:pointer}
+.tab.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12);text-shadow:0 0 10px var(--cy)}
+.note{font-size:12px;color:var(--am)}
 </style>
 </head>
 <body>
 <div class="wrap">
 <div class="top"><span class="logo">SC HUB</span><span class="info" id="info">Cargando…</span></div>
 <h1>Comercio</h1>
-<p class="sub">Mejor terminal para comprar, mejor para vender, y cuántos SCU puedes mover de verdad.</p>
+<p class="sub" id="sub"></p>
+<div class="tabs"><button class="tab on" data-m="routes">Rutas</button><button class="tab" data-m="sell">Vender mi carga</button><button class="tab" data-m="buy">Comprar</button></div>
 <div class="filters">
-<div><label for="scu">Capacidad (SCU)</label><input id="scu" inputmode="numeric" value="96" style="width:120px"></div>
-<div><label for="cash">Capital (aUEC)</label><input id="cash" inputmode="numeric" placeholder="sin límite" style="width:160px"></div>
-<div><label for="sys">Sistema</label><select id="sys"><option value="">Todos</option></select></div>
-<div><label for="age">Antigüedad máx.</label><select id="age"><option value="1">1 hora</option><option value="6">6 horas</option><option value="24" selected>24 horas</option><option value="72">3 días</option><option value="1000000">Cualquiera</option></select></div>
-<div><label for="sort">Ordenar por</label><select id="sort"><option value="total">Beneficio total</option><option value="per">Beneficio por SCU</option></select></div>
+<div id="f-com"><label for="com">Mercancía</label><input id="com" list="coms" placeholder="Escribe o elige…" style="width:230px" autocomplete="off"><datalist id="coms"></datalist></div>
+<div id="f-scu"><label for="scu" id="lab-scu">Capacidad (SCU)</label><input id="scu" inputmode="numeric" value="96" style="width:120px"></div>
+<div id="f-cash"><label for="cash">Capital (aUEC)</label><input id="cash" inputmode="numeric" placeholder="sin límite" style="width:160px"></div>
+<div id="f-sys"><label for="sys">Sistema</label><select id="sys"><option value="">Todos</option></select></div>
+<div id="f-age"><label for="age">Antigüedad máx.</label><select id="age"><option value="1">1 hora</option><option value="6">6 horas</option><option value="24" selected>24 horas</option><option value="72">3 días</option><option value="1000000">Cualquiera</option></select></div>
+<div id="f-sort"><label for="sort">Ordenar por</label><select id="sort"></select></div>
 </div>
 <section class="card"><div class="scroll" id="out"><p class="empty">Cargando datos…</p></div></section>
 <footer>Web no oficial de la comunidad. Star Citizen es una marca de Cloud Imperium Rights LLC. Los precios provienen de <a href="https://uexcorp.space" target="_blank" rel="noopener">UEX Corp</a> y los aportan los jugadores: fíjate siempre en la antigüedad del dato.</footer>
@@ -56,7 +62,12 @@ const fmt = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 0});
 const num = v => { const d = String(v).replace(/\D/g, ''); return d ? Number(d) : 0; };
 function load(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
 function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-let DATA, META, EXTRA = 0;
+let DATA, META, EXTRA = 0, MODE = 'routes';
+const IDS = ['com', 'scu', 'cash', 'sys', 'age', 'sort'];
+const SORTS = {routes: [['total', 'Beneficio total'], ['per', 'Beneficio por SCU']], sell: [['price', 'Precio más alto'], ['total', 'Ingreso total']], buy: [['price', 'Precio más bajo'], ['stock', 'Más stock']]};
+const SHOW = {routes: ['scu', 'cash', 'sys', 'age', 'sort'], sell: ['com', 'scu', 'sys', 'age', 'sort'], buy: ['com', 'scu', 'cash', 'sys', 'age', 'sort']};
+const SCULAB = {routes: 'Capacidad (SCU)', sell: 'SCU que tienes', buy: 'SCU que quieres'};
+const SUB = {routes: 'Mejor terminal para comprar, mejor para vender, y cuántos SCU puedes mover de verdad.', sell: 'Elige la mercancía que llevas y mira dónde te pagan más por ella.', buy: 'Elige una mercancía y mira dónde comprarla más barata, con su stock.'};
 
 function ageOf(e) { return e.age_h == null ? Infinity : e.age_h + EXTRA; }
 function ageText(h) {
@@ -65,13 +76,23 @@ function ageText(h) {
   if (h < 48) return Math.round(h) + ' h';
   return Math.round(h / 24) + ' d';
 }
+const dot = h => '<span class="' + (h < 1 ? 'g' : h < 24 ? 'a' : 'r') + '">● ' + ageText(h) + '</span>';
 function where(e) { return esc(e.terminal) + '<div class="m">' + esc([e.place, e.system].filter(Boolean).join(' · ')) + '</div>'; }
+function ok(e) { const sys = $('sys').value; return (!sys || e.system === sys) && ageOf(e) <= Number($('age').value); }
+function msg(t) { $('out').innerHTML = '<p class="empty">' + t + '</p>'; }
 
-function render() {
-  const cap = num($('scu').value), cash = num($('cash').value) || Infinity;
-  const maxAge = Number($('age').value), sys = $('sys').value, sort = $('sort').value;
-  ['scu','cash','age','sort','sys'].forEach(k => save('sch_' + k, $(k).value));
-  const ok = e => (!sys || e.system === sys) && ageOf(e) <= maxAge;
+function setMode(m) {
+  MODE = m; save('sch_mode', m);
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  IDS.forEach(k => { $('f-' + k).style.display = SHOW[m].includes(k) ? '' : 'none'; });
+  $('lab-scu').textContent = SCULAB[m]; $('sub').textContent = SUB[m];
+  const cur = load('sch_sort_' + m, SORTS[m][0][0]);
+  $('sort').innerHTML = SORTS[m].map(o => '<option value="' + o[0] + '"' + (o[0] === cur ? ' selected' : '') + '>' + o[1] + '</option>').join('');
+  render();
+}
+
+function renderRoutes() {
+  const cap = num($('scu').value), cash = num($('cash').value) || Infinity, sort = $('sort').value;
   const routes = [];
   for (const c of DATA.commodities) {
     let best = null;
@@ -87,12 +108,33 @@ function render() {
     if (best) routes.push(best);
   }
   routes.sort((x, y) => y[sort] - x[sort]);
-  if (!routes.length) { $('out').innerHTML = '<p class="empty">No hay rutas con estos filtros. Prueba a ampliar la antigüedad de los datos o a cambiar de sistema.</p>'; return; }
+  if (!routes.length) return msg('No hay rutas con estos filtros. Prueba a ampliar la antigüedad de los datos o a cambiar de sistema.');
   $('out').innerHTML = '<table><thead><tr><th>Mercancía</th><th>Comprar en (más barato)</th><th>Stock</th><th>Vender en (más caro)</th><th>Demanda</th><th>SCU a cargar</th><th>Por SCU</th><th>Total</th><th>Dato</th></tr></thead><tbody>' +
-    routes.slice(0, 100).map(r => {
-      const cls = r.age < 1 ? 'g' : r.age < 24 ? 'a' : 'r';
-      return '<tr><td><b>' + esc(r.name) + '</b></td><td>' + where(r.b) + '<div class="n m">' + fmt(r.b.price) + ' /SCU</div></td><td class="n">' + (r.b.scu == null ? '?' : fmt(r.b.scu)) + '</td><td>' + where(r.s) + '<div class="n m">' + fmt(r.s.price) + ' /SCU</div></td><td class="n">' + (r.s.demand == null ? '?' : fmt(r.s.demand)) + '</td><td class="n">' + fmt(r.scu) + '</td><td class="n g">+ ' + fmt(r.per) + '</td><td class="n g"><b>' + fmt(r.total) + '</b></td><td class="' + cls + '">● ' + ageText(r.age) + '</td></tr>';
-    }).join('') + '</tbody></table>';
+    routes.slice(0, 100).map(r => '<tr><td><b>' + esc(r.name) + '</b></td><td>' + where(r.b) + '<div class="n m">' + fmt(r.b.price) + ' /SCU</div></td><td class="n">' + (r.b.scu == null ? '?' : fmt(r.b.scu)) + '</td><td>' + where(r.s) + '<div class="n m">' + fmt(r.s.price) + ' /SCU</div></td><td class="n">' + (r.s.demand == null ? '?' : fmt(r.s.demand)) + '</td><td class="n">' + fmt(r.scu) + '</td><td class="n g">+ ' + fmt(r.per) + '</td><td class="n g"><b>' + fmt(r.total) + '</b></td><td>' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
+}
+
+function renderList() {
+  const sell = MODE === 'sell';
+  const name = $('com').value.trim().toLowerCase();
+  const c = DATA.commodities.find(x => x.name.toLowerCase() === name);
+  if (!c) return msg('Elige una mercancía de la lista para ver ' + (sell ? 'dónde se vende más caro.' : 'dónde comprarla más barata.'));
+  const qty = num($('scu').value), cash = num($('cash').value) || Infinity, sort = $('sort').value;
+  const rows = (sell ? c.sell : c.buy).filter(e => ok(e) && !e.no_demand).map(e => {
+    const lim = sell ? e.demand : e.scu;
+    let n = qty ? Math.min(qty, lim == null ? qty : lim) : (lim == null ? 0 : lim);
+    if (!sell) n = Math.min(n, Math.floor(cash / e.price));
+    return {e, lim, n, total: e.price * n, age: ageOf(e)};
+  });
+  rows.sort((x, y) => sort === 'total' ? y.total - x.total : sort === 'stock' ? (y.lim || 0) - (x.lim || 0) : sell ? y.e.price - x.e.price : x.e.price - y.e.price);
+  if (!rows.length) return msg('No hay datos de ' + esc(c.name) + ' con estos filtros. Prueba a ampliar la antigüedad o a cambiar de sistema.');
+  $('out').innerHTML = '<table><thead><tr><th>Terminal</th><th>Precio /SCU</th><th>' + (sell ? 'Demanda' : 'Stock') + '</th><th>' + (sell ? 'Puedes vender' : 'Puedes comprar') + '</th><th>' + (sell ? 'Ingreso' : 'Coste') + '</th><th>Dato</th></tr></thead><tbody>' +
+    rows.slice(0, 60).map(r => '<tr><td>' + where(r.e) + '</td><td class="n ' + (sell ? 'g' : '') + '"><b>' + fmt(r.e.price) + '</b></td><td class="n">' + (r.lim == null ? '?' : fmt(r.lim)) + '</td><td class="n">' + fmt(r.n) + (qty && r.n < qty ? '<div class="note">solo ' + fmt(r.n) + ' de ' + fmt(qty) + '</div>' : '') + '</td><td class="n">' + (r.n ? fmt(r.total) : '—') + '</td><td>' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
+}
+
+function render() {
+  IDS.forEach(k => { if (k !== 'sort') save('sch_' + k, $(k).value); });
+  save('sch_sort_' + MODE, $('sort').value);
+  if (MODE === 'routes') renderRoutes(); else renderList();
 }
 
 async function init() {
@@ -100,21 +142,20 @@ async function init() {
     const [a, b] = await Promise.all([fetch('data/commodities.json', {cache: 'no-store'}), fetch('data/meta.json', {cache: 'no-store'})]);
     if (!a.ok || !b.ok) throw new Error('HTTP');
     DATA = await a.json(); META = await b.json();
-  } catch (e) {
-    $('out').innerHTML = '<p class="empty">No se pudieron cargar los datos. Inténtalo de nuevo en unos minutos.</p>';
-    $('info').textContent = 'Sin datos';
-    return;
-  }
+  } catch (e) { msg('No se pudieron cargar los datos. Inténtalo de nuevo en unos minutos.'); $('info').textContent = 'Sin datos'; return; }
   EXTRA = Math.max(0, (Date.now() - Date.parse(META.generated_at)) / 36e5);
   const systems = new Set();
   DATA.commodities.forEach(c => c.buy.concat(c.sell).forEach(e => e.system && systems.add(e.system)));
   [...systems].sort().forEach(s => $('sys').insertAdjacentHTML('beforeend', '<option>' + esc(s) + '</option>'));
-  ['scu','cash','age','sort','sys'].forEach(k => { const v = load('sch_' + k, null); if (v !== null) $(k).value = v; });
-  ['scu','cash'].forEach(k => $(k).addEventListener('input', render));
-  ['age','sort','sys'].forEach(k => $(k).addEventListener('change', render));
+  $('coms').innerHTML = DATA.commodities.map(c => c.name).sort().map(n => '<option value="' + esc(n) + '">').join('');
+  IDS.forEach(k => { if (k !== 'sort') { const v = load('sch_' + k, null); if (v !== null) $(k).value = v; } });
+  ['com', 'scu', 'cash'].forEach(k => $(k).addEventListener('input', render));
+  ['age', 'sort', 'sys'].forEach(k => $(k).addEventListener('change', render));
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
   const v = META.game_versions && META.game_versions.live;
   $('info').innerHTML = (v ? 'Parche <b>' + esc(v) + '</b> · ' : '') + 'datos de hace <b>' + ageText(EXTRA) + '</b> · <b>' + (META.fresh_under_24h_percent == null ? '?' : META.fresh_under_24h_percent) + '%</b> de los precios, de menos de 24 h';
-  render();
+  const m = load('sch_mode', 'routes');
+  setMode(SORTS[m] ? m : 'routes');
 }
 init();
 </script>
