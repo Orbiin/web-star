@@ -3,37 +3,37 @@
 
 Uso:
   python collector/collect.py            -> genera site/data/commodities.json y meta.json
-  python collector/collect.py --inspect  -> muestra los campos reales de la API (usar la 1ª vez)
+  python collector/collect.py --inspect  -> muestra los campos reales de la API
 
 Solo usa la libreria estandar de Python 3.9+.
 """
 import json, os, sys, time, urllib.request, urllib.error
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
 BASE = os.environ.get("UEX_BASE", "https://api.uexcorp.space/2.0")
-TOKEN = os.environ.get("UEX_TOKEN", "")          # opcional
+TOKEN = os.environ.get("UEX_TOKEN", "")
 OUT = Path(os.environ.get("OUT_DIR", "site/data"))
-TOP = 5                                          # mejores terminales a guardar por mercancia
+TOP = 5
 
-# Nombres de campo de la API. Se prueban en orden. Los marcados CONFIRMAR no los he
-# podido comprobar contra la API real: ejecuta --inspect y ajusta si hace falta.
-FIELDS = {
-    "commodity_name": ["commodity_name"],
-    "terminal_name":  ["terminal_name"],
-    "system":         ["star_system_name"],
-    "price_buy":      ["price_buy"],
-    "price_sell":     ["price_sell"],
-    "stock_buy":      ["scu_buy"],               # CONFIRMAR: SCU disponibles para comprar
-    "demand_sell":    ["scu_sell"],              # CONFIRMAR: SCU que admite el terminal al vender
-    "updated":        ["date_modified"],
+# Campos de commodities_prices_all (confirmados con datos reales el 2026-11-20).
+# Lo que NO esta confirmado esta marcado: ver meta.json -> diag.
+F = {
+    "commodity": "commodity_name", "terminal": "terminal_name", "terminal_id": "id_terminal",
+    "price_buy": "price_buy", "price_sell": "price_sell",
+    "stock_buy": "scu_buy",           # SCU disponibles para comprar
+    "demand_sell": "scu_sell",        # SIN CONFIRMAR: demanda actual al vender
+    "stock_sell": "scu_sell_stock",   # SIN CONFIRMAR: stock del terminal al vender
+    "avg_sell": "scu_sell_avg",
+    "status_buy": "status_buy", "status_sell": "status_sell",
+    "updated": "date_modified",
 }
-REQUIRED = ["commodity_name", "terminal_name", "price_buy", "price_sell"]
 
 
 def fetch(endpoint, tries=3):
     req = urllib.request.Request(f"{BASE}/{endpoint}", headers={
-        "User-Agent": "sc-hub-collector/0.1", "Accept": "application/json",
+        "User-Agent": "sc-hub-collector/0.2", "Accept": "application/json",
         **({"Authorization": f"Bearer {TOKEN}"} if TOKEN else {})})
     for i in range(tries):
         try:
@@ -48,80 +48,122 @@ def fetch(endpoint, tries=3):
     raise SystemExit(f"No se pudo obtener {endpoint}")
 
 
-def pick(rec, key):
-    for name in FIELDS[key]:
-        if rec.get(name) is not None:
-            return rec[name]
-    return None
+def g(rec, key):
+    return rec.get(F[key])
 
 
 def iso(ts):
     if isinstance(ts, (int, float)) and ts > 0:
         return datetime.fromtimestamp(ts, timezone.utc).isoformat(timespec="seconds")
-    return ts if isinstance(ts, str) else None
+    return None
 
 
-def inspect():
-    data = fetch("commodities_prices_all")
-    print(f"{len(data)} registros. Campos del primer registro:")
-    print(json.dumps(data[0], indent=2, ensure_ascii=False))
+def positive_or_unknown(v):
+    return v is None or v > 0
 
 
-def build(prices):
+def locate(terminals):
+    """id_terminal -> sistema y lugar. Campos de /terminals sin confirmar: se prueban varios."""
+    out = {}
+    for t in terminals or []:
+        place = next((t[k] for k in ("city_name", "space_station_name", "outpost_name",
+                                     "poi_name", "orbit_name", "planet_name") if t.get(k)), None)
+        out[t.get("id")] = {"system": t.get("star_system_name"), "place": place}
+    return out
+
+
+def build(prices, where):
     if len(prices) < 50:
         raise SystemExit(f"Solo {len(prices)} precios: demasiado pocos, no se publica nada.")
-    sample = prices[0]
-    missing = [k for k in REQUIRED if pick(sample, k) is None]
+    missing = [k for k in ("commodity", "terminal", "price_buy", "price_sell")
+               if F[k] not in prices[0]]
     if missing:
-        raise SystemExit(f"Faltan campos obligatorios {missing}. Campos reales: {sorted(sample)}")
-    optional = {k: any(pick(p, k) is not None for p in prices[:200])
-                for k in ("stock_buy", "demand_sell", "updated", "system")}
+        raise SystemExit(f"Faltan campos {missing}. Campos reales: {sorted(prices[0])}")
+    now = time.time()
+
+    def entry(p, side):
+        loc = where.get(g(p, "terminal_id"), {})
+        ts = g(p, "updated")
+        e = {"terminal": g(p, "terminal"), "system": loc.get("system"), "place": loc.get("place"),
+             "price": g(p, "price_" + side), "updated": iso(ts),
+             "age_h": round((now - ts) / 3600, 1) if isinstance(ts, (int, float)) else None}
+        if side == "buy":
+            e["scu"] = g(p, "stock_buy")
+            e["status"] = g(p, "status_buy")
+        else:
+            e["demand"] = g(p, "demand_sell")
+            e["stock"] = g(p, "stock_sell")
+            e["avg"] = g(p, "avg_sell")
+            e["status"] = g(p, "status_sell")
+        return e
 
     by = {}
     for p in prices:
-        by.setdefault(pick(p, "commodity_name"), []).append(p)
-
-    def entry(p, price_key, scu_key):
-        scu = pick(p, scu_key)
-        return {"terminal": pick(p, "terminal_name"), "system": pick(p, "system"),
-                "price": pick(p, price_key), "scu": scu, "updated": iso(pick(p, "updated"))}
+        by.setdefault(g(p, "commodity"), []).append(p)
 
     items = []
     for name, recs in by.items():
-        buys = [entry(p, "price_buy", "stock_buy") for p in recs
-                if (pick(p, "price_buy") or 0) > 0 and (pick(p, "stock_buy") or 1) > 0]
-        sells = [entry(p, "price_sell", "demand_sell") for p in recs
-                 if (pick(p, "price_sell") or 0) > 0 and (pick(p, "demand_sell") or 1) > 0]
+        buys = [entry(p, "buy") for p in recs
+                if (g(p, "price_buy") or 0) > 0 and positive_or_unknown(g(p, "stock_buy"))]
+        sells = [entry(p, "sell") for p in recs if (g(p, "price_sell") or 0) > 0]
+        for s in sells:
+            s["no_demand"] = s["demand"] == 0
         buys.sort(key=lambda e: e["price"])
-        sells.sort(key=lambda e: -e["price"])
+        sells.sort(key=lambda e: (e["no_demand"], -e["price"]))
         buys, sells = buys[:TOP], sells[:TOP]
         margin = None
         if buys and sells and buys[0]["terminal"] != sells[0]["terminal"]:
             margin = round(sells[0]["price"] - buys[0]["price"], 2)
         items.append({"name": name, "buy": buys, "sell": sells, "margin_per_scu": margin})
-    items.sort(key=lambda i: -(i["margin_per_scu"] or -1e18))
+    items.sort(key=lambda i: -(i["margin_per_scu"] if i["margin_per_scu"] is not None else -1e18))
 
-    now = time.time()
-    stamps = [pick(p, "updated") for p in prices if isinstance(pick(p, "updated"), (int, float))]
-    fresh = round(100 * sum(now - t < 3600 for t in stamps) / len(stamps)) if stamps else None
+    buy_rows = [p for p in prices if (g(p, "price_buy") or 0) > 0]
+    sell_rows = [p for p in prices if (g(p, "price_sell") or 0) > 0]
+    stamps = [g(p, "updated") for p in prices if isinstance(g(p, "updated"), (int, float))]
+    first = lambda rows, f: next((r for r in rows if f(r)), None)
+    diag = {
+        "buy_rows": len(buy_rows),
+        "buy_rows_with_stock": sum((g(p, "stock_buy") or 0) > 0 for p in buy_rows),
+        "sell_rows": len(sell_rows),
+        "sell_rows_with_demand": sum((g(p, "demand_sell") or 0) > 0 for p in sell_rows),
+        "sell_rows_with_stock": sum((g(p, "stock_sell") or 0) > 0 for p in sell_rows),
+        "status_buy": dict(Counter(g(p, "status_buy") for p in buy_rows)),
+        "status_sell": dict(Counter(g(p, "status_sell") for p in sell_rows)),
+        "terminals_located": len(where),
+        "samples": {
+            "buy_with_stock": first(buy_rows, lambda r: (g(r, "stock_buy") or 0) > 0),
+            "sell_with_demand": first(sell_rows, lambda r: (g(r, "demand_sell") or 0) > 0),
+            "sell_zero_demand": first(sell_rows, lambda r: (g(r, "demand_sell") or 0) == 0),
+        },
+    }
     meta = {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "source": "UEX Corp API 2.0", "price_records": len(prices),
-            "commodities": len(items), "fields_available": optional,
-            "fresh_under_1h_percent": fresh}
+            "commodities": len(items),
+            "fresh_under_1h_percent": round(100 * sum(now - t < 3600 for t in stamps) / len(stamps)) if stamps else None,
+            "fresh_under_24h_percent": round(100 * sum(now - t < 86400 for t in stamps) / len(stamps)) if stamps else None,
+            "diag": diag}
     return {"generated_at": meta["generated_at"], "commodities": items}, meta
 
 
 def main():
     if "--inspect" in sys.argv:
-        return inspect()
+        data = fetch("commodities_prices_all")
+        print(f"{len(data)} registros. Primer registro:")
+        print(json.dumps(data[0], indent=2, ensure_ascii=False))
+        return
     prices = fetch("commodities_prices_all")
-    data, meta = build(prices)
+    try:
+        terminals = fetch("terminals", tries=2)
+    except SystemExit:
+        terminals = []
+    data, meta = build(prices, locate(terminals))
+    if terminals:
+        meta["diag"]["terminal_sample"] = terminals[0]
     try:
         meta["game_versions"] = fetch("game_versions", tries=1)
     except SystemExit:
         meta["game_versions"] = None
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "sample.json").write_text(json.dumps(prices[:3], ensure_ascii=False, indent=1), encoding="utf-8")
     for name, obj in (("commodities.json", data), ("meta.json", meta)):
         tmp = OUT / (name + ".tmp")
         tmp.write_text(json.dumps(obj, ensure_ascii=False), encoding="utf-8")
