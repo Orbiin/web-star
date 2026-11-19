@@ -18,12 +18,12 @@ OUT = Path(os.environ.get("OUT_DIR", "site/data"))
 TOP = 5
 
 # Campos de commodities_prices_all (confirmados con datos reales el 2026-11-20).
-# Lo que NO esta confirmado esta marcado: ver meta.json -> diag.
+# Confirmado con datos reales: scu_sell = demanda actual (0 = el terminal no compra ahora).
 F = {
     "commodity": "commodity_name", "terminal": "terminal_name", "terminal_id": "id_terminal",
     "price_buy": "price_buy", "price_sell": "price_sell",
     "stock_buy": "scu_buy",           # SCU disponibles para comprar
-    "demand_sell": "scu_sell",        # SIN CONFIRMAR: demanda actual al vender
+    "demand_sell": "scu_sell",        # demanda actual al vender
     "stock_sell": "scu_sell_stock",   # SIN CONFIRMAR: stock del terminal al vender
     "avg_sell": "scu_sell_avg",
     "status_buy": "status_buy", "status_sell": "status_sell",
@@ -66,9 +66,12 @@ def locate(terminals):
     """id_terminal -> sistema y lugar. Campos de /terminals sin confirmar: se prueban varios."""
     out = {}
     for t in terminals or []:
-        place = next((t[k] for k in ("city_name", "space_station_name", "outpost_name",
-                                     "poi_name", "orbit_name", "planet_name") if t.get(k)), None)
-        out[t.get("id")] = {"system": t.get("star_system_name"), "place": place}
+        place = t.get("displayname") or next((t[k] for k in (
+            "city_name", "space_station_name", "outpost_name", "orbit_name", "planet_name")
+            if t.get(k)), None)
+        out[t.get("id")] = {"system": t.get("star_system_name"), "place": place,
+                            "live": t.get("is_available_live") != 0,
+                            "max_container": t.get("max_container_size")}
     return out
 
 
@@ -95,10 +98,13 @@ def build(prices, where):
             e["stock"] = g(p, "stock_sell")
             e["avg"] = g(p, "avg_sell")
             e["status"] = g(p, "status_sell")
+        e["max_container"] = loc.get("max_container")
         return e
 
     by = {}
     for p in prices:
+        if not where.get(g(p, "terminal_id"), {}).get("live", True):
+            continue
         by.setdefault(g(p, "commodity"), []).append(p)
 
     items = []
@@ -112,8 +118,9 @@ def build(prices, where):
         sells.sort(key=lambda e: (e["no_demand"], -e["price"]))
         buys, sells = buys[:TOP], sells[:TOP]
         margin = None
-        if buys and sells and buys[0]["terminal"] != sells[0]["terminal"]:
-            margin = round(sells[0]["price"] - buys[0]["price"], 2)
+        with_demand = [s for s in sells if not s["no_demand"]]
+        if buys and with_demand and buys[0]["terminal"] != with_demand[0]["terminal"]:
+            margin = round(with_demand[0]["price"] - buys[0]["price"], 2)
         items.append({"name": name, "buy": buys, "sell": sells, "margin_per_scu": margin})
     items.sort(key=lambda i: -(i["margin_per_scu"] if i["margin_per_scu"] is not None else -1e18))
 
@@ -130,11 +137,6 @@ def build(prices, where):
         "status_buy": dict(Counter(g(p, "status_buy") for p in buy_rows)),
         "status_sell": dict(Counter(g(p, "status_sell") for p in sell_rows)),
         "terminals_located": len(where),
-        "samples": {
-            "buy_with_stock": first(buy_rows, lambda r: (g(r, "stock_buy") or 0) > 0),
-            "sell_with_demand": first(sell_rows, lambda r: (g(r, "demand_sell") or 0) > 0),
-            "sell_zero_demand": first(sell_rows, lambda r: (g(r, "demand_sell") or 0) == 0),
-        },
     }
     meta = {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "source": "UEX Corp API 2.0", "price_records": len(prices),
@@ -157,8 +159,6 @@ def main():
     except SystemExit:
         terminals = []
     data, meta = build(prices, locate(terminals))
-    if terminals:
-        meta["diag"]["terminal_sample"] = terminals[0]
     try:
         meta["game_versions"] = fetch("game_versions", tries=1)
     except SystemExit:
