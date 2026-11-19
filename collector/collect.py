@@ -114,12 +114,14 @@ def build(prices):
 def main():
     if "--inspect" in sys.argv:
         return inspect()
-    data, meta = build(fetch("commodities_prices_all"))
+        prices = fetch("commodities_prices_all")
+    data, meta = build(prices)
     try:
         meta["game_versions"] = fetch("game_versions", tries=1)
     except SystemExit:
         meta["game_versions"] = None
     OUT.mkdir(parents=True, exist_ok=True)
+      (OUT / "sample.json").write_text(json.dumps(prices[:3], ensure_ascii=False, indent=1), encoding="utf-8")
     for name, obj in (("commodities.json", data), ("meta.json", meta)):
         tmp = OUT / (name + ".tmp")
         tmp.write_text(json.dumps(obj, ensure_ascii=False), encoding="utf-8")
