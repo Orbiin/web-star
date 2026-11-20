@@ -40,6 +40,22 @@ recompensas: Armaduras/Objetos Wikelo
 17. Ir a la salida del nucleo, puerta que ponga ASD en la pared
 18. Obtener 1 de los 3 catalizadores, se explican en los siguientes pasos
 19. Habrá que ir al ala de RESEARCH
+23. Bajar hasta el ascensor princial del patio central en la planta 9
+24. Sube a la planta 1
+25. Gira a la izquierda y baja por el agujero
+26. Avanza hasta llegar al ascensor que te llevara al SITE-B
+27. Avanza acabando con los NPC hasta llegar al proximo ascensor
+28. Acabar con los NPC y llegar a la pasarela en la cual habrá NPC
+29. Avanzar por la pasarela y al llegar al final dirigirse a la derecha acabando con los NPC que haya
+30. Luego giraremos a la izquierda y seguiremos avanzando acabando los todos los NPC que haya hasta llegar a una sala con un mostrador
+31. Ahí habra que matar a los NPC y conseguir el código de la puerta que se encuentra en la parte superior del interior del mostrador
+32. Ingresar el código en la puerta roja y avanzar matando a los NPC
+33. Llegar a la puerta de la anticamara
+34. En la puerta grande que habrá al fondo de la sala, cuando se abrá por proximidad, apareceran unos NPC que habrá que matar
+35. Avanzar hasta llegar al laboratorio y subir a la planta de arriba para activar el terminal y proceder con el experimento
+36. Descarga los resultados (estos se enviarán a tu base principal)
+37. Extraer
+
 
 - CATALIZADOR 1 XTL:
 
@@ -57,21 +73,6 @@ Bajar al laboratorio medico en la planta 8
 Descargar los datos del ordenador
 Acabar con el tio Sam
 
-23. Bajar hasta el ascensor princial del patio central en la planta 9
-24. Sube a la planta 1
-25. Gira a la izquierda y baja por el agujero
-26. Avanza hasta llegar al ascensor que te llevara al SITE-B
-27. Avanza acabando con los NPC hasta llegar al proximo ascensor
-28. Acabar con los NPC y llegar a la pasarela en la cual habrá NPC
-29. Avanzar por la pasarela y al llegar al final dirigirse a la derecha acabando con los NPC que haya
-30. Luego giraremos a la izquierda y seguiremos avanzando acabando los todos los NPC que haya hasta llegar a una sala con un mostrador
-31. Ahí habra que matar a los NPC y conseguir el código de la puerta que se encuentra en la parte superior del interior del mostrador
-32. Ingresar el código en la puerta roja y avanzar matando a los NPC
-33. Llegar a la puerta de la anticamara
-34. En la puerta grande que habrá al fondo de la sala, cuando se abrá por proximidad, apareceran unos NPC que habrá que matar
-35. Avanzar hasta llegar al laboratorio y subir a la planta de arriba para activar el terminal y proceder con el experimento
-36. Descarga los resultados (estos se enviarán a tu base principal)
-37. Extraer
 
 ## Consejos
 > Cubrirse bien de la radiación en el núcleo de energía
