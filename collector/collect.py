@@ -260,7 +260,8 @@ def guides():
         out.append({"slug": f.stem, "title": meta.get("titulo", f.stem),
                     "status": meta.get("estado", "inactivo").lower(), "patch": meta.get("parche", ""),
                     "summary": meta.get("resumen", ""), "requirements": meta.get("requisitos", ""),
-                    "players": meta.get("jugadores", ""), "rewards": meta.get("recompensas", ""), "body": body})
+                    "players": meta.get("jugadores", ""), "rewards": meta.get("recompensas", ""),
+                    "image": meta.get("imagen", ""), "body": body})
     out.sort(key=lambda g: (g["status"] != "activo", g["title"].lower()))
     return out
 
