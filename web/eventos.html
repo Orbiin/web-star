@@ -53,6 +53,8 @@ a{color:var(--cy)}
 .prose ol,.prose ul{padding-left:22px}.prose li{margin:6px 0}
 .prose ol li::marker{color:var(--cy);font-weight:700}
 .prose blockquote{margin:14px 0;padding:10px 16px;border-left:3px solid var(--am);background:rgba(255,180,58,.08);border-radius:4px}
+.prose img{display:block;max-width:100%;margin:12px 0;border-radius:8px;border:1px solid var(--line)}
+.cover{display:block;width:100%;max-height:300px;object-fit:cover}
 .prose code{background:#10202c;padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px}
 .tiles{display:flex;flex-wrap:wrap;gap:10px;padding:0 24px}
 .tile{flex:1 1 160px;padding:10px 12px;background:#0b141c;border:1px solid #1f3a4a;border-left:3px solid var(--cy);border-radius:4px}
@@ -78,8 +80,13 @@ a{color:var(--cy)}
 const REPO = 'Orbiin/web-star';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Las imágenes se suben a web/guias/ y se citan solo por su nombre (sin espacios ni tildes).
+function imgSrc(u) {
+  if (/^https:\/\/[^\s"']+$/.test(u)) return u;
+  return /^[\w.\-]+$/.test(u) ? 'guias/' + u : null;
+}
 function inline(s) {
-  return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>')
+  return esc(s).replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (m, alt, u) => { const src = imgSrc(u); return src ? '<a href="' + src + '" target="_blank" rel="noopener"><img src="' + src + '" alt="' + alt + '" loading="lazy"></a>' : m; }).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>')
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 }
 function md(t) {
@@ -110,7 +117,8 @@ function renderDetail() {
   const g = G.find(x => x.slug === SEL);
   if (!g) { $('detail').innerHTML = '<p class="empty">Elige una guía de la lista.</p>'; return; }
   const tile = (a, b) => b ? '<div class="tile"><span>' + a + '</span>' + esc(b) + '</div>' : '';
-  $('detail').innerHTML = '<div style="padding:22px 24px 12px"><div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><h1 style="margin:0;font-size:30px">' + esc(g.title) + '</h1>' + badge(g) +
+  const cs = g.image ? imgSrc(g.image) : null;
+  $('detail').innerHTML = (cs ? '<img class="cover" src="' + esc(cs) + '" alt="" loading="lazy">' : '') + '<div style="padding:22px 24px 12px"><div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><h1 style="margin:0;font-size:30px">' + esc(g.title) + '</h1>' + badge(g) +
     (g.patch ? '<span class="m" style="margin-left:auto">Revisada en el parche ' + esc(g.patch) + '</span>' : '') + '</div>' +
     (g.summary ? '<p class="m" style="margin:10px 0 0">' + esc(g.summary) + '</p>' : '') + '</div>' +
     '<div class="tiles">' + tile('Requisitos', g.requirements) + tile('Jugadores', g.players) + tile('Recompensas', g.rewards) + '</div>' +
