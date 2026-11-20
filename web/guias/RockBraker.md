@@ -1,7 +1,7 @@
 ---
 titulo: OPERATION ROCK BRAKER
 estado: activo
-parche: [5.0.0]
+parche: 5.0.0
 objetivo: Minar material que solo se encuentra en esa piedra
 requisitos: Junior o Contrator con Shubin
 jugadores: Solo/Grupo
