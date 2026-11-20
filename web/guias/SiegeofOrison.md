@@ -1,7 +1,7 @@
 ---
 titulo: SIEGE OF ORISON
 estado: activo
-parche: [5.0.0]
+parche: 5.0.0
 objetivo: Localizar y acabar con Mendo Ren
 requisitos: Rango mínimo: Operative
 jugadores: 2-4/ 4 recomendado
