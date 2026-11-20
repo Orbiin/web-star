@@ -153,11 +153,18 @@ def first_ok(names):
     return None, None
 
 
-def wiki_get(path):
-    req = urllib.request.Request("https://api.star-citizen.wiki/api/" + path, headers={
-        "User-Agent": "sc-hub-collector/0.3 (web-star)", "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.load(r)
+def wiki_get(path, timeout=60, tries=2):
+    last = None
+    for _ in range(tries):
+        try:
+            req = urllib.request.Request("https://api.star-citizen.wiki/api/" + path, headers={
+                "User-Agent": "sc-hub-collector/0.5 (web-star)", "Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.load(r)
+        except Exception as e:
+            last = e
+            time.sleep(2)
+    raise last
 
 
 def trim(v):
@@ -236,29 +243,40 @@ def shape(v, depth=3):
     return v[:60] if isinstance(v, str) else v
 
 
-def wiki_sample(uex_uuids):
-    """TEMPORAL: comprueba si los uuid de UEX y de la wiki coinciden y enseña la estructura
-    de una nave con puertos/componentes. Se quitara cuando la ventana de Naves este terminada."""
+WANT = ["ports", "components", "power", "power_pools", "insurance", "skus", "msrp", "role", "career", "size",
+        "signature", "turrets", "parts", "images", "loaner", "production_status", "cooling", "foci", "type"]
+
+
+def wiki_sample(uex_vehicles):
+    """TEMPORAL: estructura de una nave completa de la wiki y comprobacion de como unir sus naves
+    con las de UEX (por uuid o por nombre). Se quitara cuando la ventana de Naves este terminada."""
     res = {}
     try:
-        uuids, first, page, last, pages = set(), None, 1, 1, 0
-        while page <= min(last, 20):
-            body = wiki_get("vehicles?page%5Bnumber%5D=" + str(page))
-            data = body.get("data", [])
-            first = first or (data[0] if data else None)
-            uuids.update(d.get("uuid") for d in data)
-            last = (body.get("meta") or {}).get("last_page", 1)
-            page, pages = page + 1, pages + 1
-            time.sleep(0.5)
-        res["match"] = {"wiki": len(uuids), "uex": len(uex_uuids), "uuid_overlap": len(uuids & uex_uuids), "pages": pages}
-        res["list_item"] = shape(first, 3)
-    except Exception as e:
-        res["match"] = {"error": str(e)}
-    try:
         body = wiki_get("vehicles/gladius?include=ports,components")
-        res["gladius"] = shape(body.get("data", body), 4)
+        g = body.get("data", body)
+        res["gladius_keys"] = sorted(g)
+        res["sections"] = {k: shape(g[k], 4) for k in WANT if k in g}
+        u = next((v for v in uex_vehicles if (v.get("name") or "").lower() == "gladius"), None) or {}
+        res["gladius_match"] = {"wiki_uuid": g.get("uuid"), "wiki_game_name": g.get("game_name"),
+                                "uex_uuid": u.get("uuid"), "uex_name_full": u.get("name_full")}
     except Exception as e:
         res["gladius"] = {"error": str(e)}
+    uex_uuids = {v.get("uuid") for v in uex_vehicles if v.get("uuid")}
+    uex_names = {(v.get("name_full") or "").lower() for v in uex_vehicles}
+    uuids, names, page, last, ok, failed = set(), set(), 1, 1, 0, 0
+    while page <= min(last, 20):
+        try:
+            body = wiki_get("vehicles?page%5Bnumber%5D=" + str(page))
+            for d in body.get("data", []):
+                uuids.add(d.get("uuid"))
+                names.add((d.get("game_name") or d.get("name") or "").lower())
+            last, ok = (body.get("meta") or {}).get("last_page", 1), ok + 1
+        except Exception:
+            failed += 1
+        page += 1
+        time.sleep(1)
+    res["match"] = {"pages_ok": ok, "pages_failed": failed, "wiki": len(uuids), "uex": len(uex_uuids),
+                    "uuid_overlap": len(uuids & uex_uuids), "name_overlap": len(names & uex_names)}
     return res
 
 
@@ -274,7 +292,7 @@ def ships(where):
         out[key] = data if isinstance(data, list) else []
         diag["endpoints"][key] = name
         diag["counts"][key] = len(out[key])
-    diag["wiki"] = wiki_sample({v.get("uuid") for v in out["vehicles"] if v.get("uuid")})
+    diag["wiki"] = wiki_sample(out["vehicles"])
     return out, diag
 
 
