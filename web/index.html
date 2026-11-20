@@ -22,7 +22,7 @@ input,select{height:44px;padding:0 12px;background:#08111a;border:1px solid #1d5
 input:focus,select:focus{outline:2px solid var(--cy)}
 .card{background:linear-gradient(180deg,#0f1b25,#0a131b);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35)}
 .scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:900px}
+table{width:100%;border-collapse:collapse;min-width:980px}
 th{padding:11px 12px;text-align:left;font:600 11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);background:rgba(63,214,232,.07);border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:12px;border-bottom:1px solid #16303d;font-size:14px;vertical-align:top}
 tr:first-child td{background:rgba(63,214,232,.08)}
@@ -64,7 +64,7 @@ function load(k, d) { try { const v = localStorage.getItem(k); return v === null
 function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 let DATA, META, EXTRA = 0, MODE = 'routes';
 const IDS = ['com', 'scu', 'cash', 'sys', 'age', 'sort'];
-const SORTS = {routes: [['total', 'Beneficio total'], ['per', 'Beneficio por SCU']], sell: [['price', 'Precio más alto'], ['total', 'Ingreso total']], buy: [['price', 'Precio más bajo'], ['stock', 'Más stock']]};
+const SORTS = {routes: [['total', 'Beneficio total'], ['per', 'Beneficio por SCU'], ['pct', 'Beneficio %']], sell: [['price', 'Precio más alto'], ['total', 'Ingreso total']], buy: [['price', 'Precio más bajo'], ['stock', 'Más stock']]};
 const SHOW = {routes: ['scu', 'cash', 'sys', 'age', 'sort'], sell: ['com', 'scu', 'sys', 'age', 'sort'], buy: ['com', 'scu', 'cash', 'sys', 'age', 'sort']};
 const SCULAB = {routes: 'Capacidad (SCU)', sell: 'SCU que tienes', buy: 'SCU que quieres'};
 const SUB = {routes: 'Mejor terminal para comprar, mejor para vender, y cuántos SCU puedes mover de verdad.', sell: 'Elige la mercancía que llevas y mira dónde te pagan más por ella.', buy: 'Elige una mercancía y mira dónde comprarla más barata, con su stock.'};
@@ -102,15 +102,15 @@ function renderRoutes() {
       if (per <= 0) continue;
       const scu = Math.min(cap, b.scu == null ? cap : b.scu, s.demand == null ? cap : s.demand, Math.floor(cash / b.price));
       if (scu <= 0) continue;
-      const r = {name: c.name, b, s, per, scu, total: per * scu, age: Math.max(ageOf(b), ageOf(s))};
+      const r = {name: c.name, b, s, per, scu, pct: 100 * per / b.price, total: per * scu, age: Math.max(ageOf(b), ageOf(s))};
       if (!best || r[sort] > best[sort]) best = r;
     }
     if (best) routes.push(best);
   }
   routes.sort((x, y) => y[sort] - x[sort]);
   if (!routes.length) return msg('No hay rutas con estos filtros. Prueba a ampliar la antigüedad de los datos o a cambiar de sistema.');
-  $('out').innerHTML = '<table><thead><tr><th>Mercancía</th><th>Comprar en (más barato)</th><th>Stock</th><th>Vender en (más caro)</th><th>Demanda</th><th>SCU a cargar</th><th>Por SCU</th><th>Total</th><th>Dato</th></tr></thead><tbody>' +
-    routes.slice(0, 100).map(r => '<tr><td><b>' + esc(r.name) + '</b></td><td>' + where(r.b) + '<div class="n m">' + fmt(r.b.price) + ' /SCU</div></td><td class="n">' + (r.b.scu == null ? '?' : fmt(r.b.scu)) + '</td><td>' + where(r.s) + '<div class="n m">' + fmt(r.s.price) + ' /SCU</div></td><td class="n">' + (r.s.demand == null ? '?' : fmt(r.s.demand)) + '</td><td class="n">' + fmt(r.scu) + '</td><td class="n g">+ ' + fmt(r.per) + '</td><td class="n g"><b>' + fmt(r.total) + '</b></td><td>' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
+  $('out').innerHTML = '<table><thead><tr><th>Mercancía</th><th>Comprar en (más barato)</th><th>Stock</th><th>Vender en (más caro)</th><th>Demanda</th><th>SCU a cargar</th><th>Por SCU</th><th>Margen %</th><th>Total</th><th>Dato</th></tr></thead><tbody>' +
+    routes.slice(0, 100).map(r => '<tr><td><b>' + esc(r.name) + '</b></td><td>' + where(r.b) + '<div class="n m">' + fmt(r.b.price) + ' /SCU</div></td><td class="n">' + (r.b.scu == null ? '?' : fmt(r.b.scu)) + '</td><td>' + where(r.s) + '<div class="n m">' + fmt(r.s.price) + ' /SCU</div></td><td class="n">' + (r.s.demand == null ? '?' : fmt(r.s.demand)) + '</td><td class="n">' + fmt(r.scu) + '</td><td class="n g">+ ' + fmt(r.per) + '</td><td class="n g">' + r.pct.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' %</td><td class="n g"><b>' + fmt(r.total) + '</b></td><td>' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
 }
 
 function renderList() {
