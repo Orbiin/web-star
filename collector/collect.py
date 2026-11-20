@@ -240,6 +240,31 @@ def ships(where):
     return out, diag
 
 
+def guides():
+    """Lee web/guias/*.md (cabecera 'clave: valor' entre ---). Los que empiezan por _ se ignoran."""
+    d = Path("web/guias")
+    out = []
+    for f in sorted(d.glob("*.md")) if d.is_dir() else []:
+        if f.name.startswith("_"):
+            continue
+        text, meta, body = f.read_text(encoding="utf-8"), {}, ""
+        parts = text.split("---", 2) if text.lstrip().startswith("---") else None
+        if parts and len(parts) == 3:
+            for line in parts[1].splitlines():
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    meta[k.strip().lower()] = v.strip()
+            body = parts[2].strip()
+        else:
+            body = text.strip()
+        out.append({"slug": f.stem, "title": meta.get("titulo", f.stem),
+                    "status": meta.get("estado", "inactivo").lower(), "patch": meta.get("parche", ""),
+                    "summary": meta.get("resumen", ""), "requirements": meta.get("requisitos", ""),
+                    "players": meta.get("jugadores", ""), "rewards": meta.get("recompensas", ""), "body": body})
+    out.sort(key=lambda g: (g["status"] != "activo", g["title"].lower()))
+    return out
+
+
 def main():
     if "--inspect" in sys.argv:
         data = fetch("commodities_prices_all")
@@ -257,6 +282,10 @@ def main():
     except SystemExit:
         meta["game_versions"] = None
     OUT.mkdir(parents=True, exist_ok=True)
+    try:
+        (OUT / "guides.json").write_text(json.dumps(guides(), ensure_ascii=False), encoding="utf-8")
+    except Exception as e:
+        print("Guias no generadas:", e, file=sys.stderr)
     try:
         where = locate(terminals)
         raw, meta["ships_diag"] = ships(where)
