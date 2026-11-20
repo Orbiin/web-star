@@ -187,21 +187,56 @@ def wiki_diag():
     return res
 
 
+TAGS = {"is_cargo": "Carga", "is_military": "Militar", "is_mining": "Minería", "is_exploration": "Exploración",
+        "is_salvage": "Salvamento", "is_medical": "Médica", "is_racing": "Carreras", "is_passenger": "Pasajeros",
+        "is_starter": "Inicial", "is_stealth": "Sigilo", "is_refuel": "Repostaje", "is_repair": "Reparación",
+        "is_science": "Ciencia", "is_industrial": "Industrial", "is_bomber": "Bombardero", "is_carrier": "Portanaves",
+        "is_interdiction": "Interdicción", "is_construction": "Construcción", "is_ground_vehicle": "Terrestre"}
+
+
+def normalize_ships(raw, where, now):
+    """Une naves + precios de compra/alquiler + ubicacion del terminal."""
+    prices = {}
+
+    def add(kind, rows, field):
+        for r in rows:
+            price = r.get(field)
+            loc = where.get(r.get("id_terminal"), {})
+            if not price or price <= 0 or not loc.get("live", True):
+                continue
+            ts = r.get("date_modified")
+            prices.setdefault(r.get("id_vehicle"), {"buy": [], "rent": []})[kind].append({
+                "terminal": r.get("terminal_name"), "system": loc.get("system"), "place": loc.get("place"),
+                "price": price, "age_h": round((now - ts) / 3600, 1) if isinstance(ts, (int, float)) else None})
+
+    add("buy", raw["purchases"], "price_buy")
+    add("rent", raw["rentals"], "price_rent")
+    out = []
+    for v in raw["vehicles"]:
+        p = prices.get(v.get("id"), {"buy": [], "rent": []})
+        for k in p:
+            p[k].sort(key=lambda e: e["price"])
+        out.append({"id": v.get("id"), "name": v.get("name"), "full": v.get("name_full"),
+                    "maker": v.get("company_name"), "scu": v.get("scu"), "crew": v.get("crew"),
+                    "mass": v.get("mass"), "size": [v.get("length"), v.get("width"), v.get("height")],
+                    "pad": v.get("pad_type"), "tags": [t for f, t in TAGS.items() if v.get(f)],
+                    "photo": v.get("url_photo"), "store": v.get("url_store"), "buy": p["buy"], "rent": p["rent"]})
+    out.sort(key=lambda x: ((x["maker"] or ""), (x["full"] or x["name"] or "")))
+    return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "ships": out}
+
+
 def ships(where):
     """Naves: lista, precios de compra y de alquiler. Se guardan los registros SIN transformar
     (los nombres de campo aun no estan confirmados) y se deja un diagnostico en meta.json."""
     spec = {"vehicles": ["vehicles"],
             "purchases": ["vehicles_purchases_prices_all", "vehicles_purchases_prices"],
             "rentals": ["vehicles_rentals_prices_all", "vehicles_rentals_prices"]}
-    out, diag = {}, {"endpoints": {}, "counts": {}, "samples": {}}
+    out, diag = {}, {"endpoints": {}, "counts": {}}
     for key, names in spec.items():
         name, data = first_ok(names)
         out[key] = data if isinstance(data, list) else []
         diag["endpoints"][key] = name
         diag["counts"][key] = len(out[key])
-        diag["samples"][key] = out[key][0] if out[key] else None
-    diag["wiki"] = wiki_diag()
-    out["where"] = {str(k): v for k, v in where.items()}
     return out, diag
 
 
@@ -223,7 +258,9 @@ def main():
         meta["game_versions"] = None
     OUT.mkdir(parents=True, exist_ok=True)
     try:
-        ship_data, meta["ships_diag"] = ships(locate(terminals))
+        where = locate(terminals)
+        raw, meta["ships_diag"] = ships(where)
+        ship_data = normalize_ships(raw, where, time.time())
         (OUT / "ships.json").write_text(json.dumps(ship_data, ensure_ascii=False), encoding="utf-8")
     except Exception as e:  # las naves nunca deben impedir publicar el comercio
         meta["ships_diag"] = {"error": str(e)}
