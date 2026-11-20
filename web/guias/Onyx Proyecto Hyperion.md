@@ -24,7 +24,7 @@ recompensas: Armaduras/Objetos Wikelo
 1. Ir completando las misiones hasta tener la última
 2. Minar las ventilaciones y arreglar los conductos
 3. Descargar los datos de la terminal
-4. Colocar las 3 baterias en el circulo principal (Aparecera unvalakkar grande que habrá que materla)
+4. Colocar las 3 baterias en el circulo principal (Aparecera un valakkar grande que habrá que matar)
 5. Descarga los datos de la consola
 6. Ir a la sala de control y limpiar mientras se avanza
 7. LLegar al reactor de potencia
