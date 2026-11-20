@@ -1,5 +1,5 @@
 ---
-titulo: 🪱VANDUUL TECH SMUGGELS
+titulo: VANDUUL TECH SMUGGELS
 estado: activo
 parche: [5.0.0]
 objetivo: Seguir el rastro de una operación de contrabando relacionada con tecnología Vanduul y descubrir qué ocurrió en las instalaciones abandonadas de QV Logistics.
