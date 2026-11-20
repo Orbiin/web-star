@@ -1,7 +1,7 @@
 ---
 titulo: HATOR
 estado: activo
-parche: [5.0.0]
+parche: 5.0.0
 objetivo: Minar Carenite
 requisitos: Rango mínimo: Ninguno
 jugadores: Grupo
