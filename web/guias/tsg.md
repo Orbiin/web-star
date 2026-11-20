@@ -10,6 +10,7 @@ recompensas: BLUEPRINTS
 imagen: PortadaTSG.jpg
 ---
 > 🌌 Sistema Nyx
+> ⚠️ Las naves capitales no deben acercarse al asteroide: tiene láseres capaces de destruirlas.
 
 ## Naves y equipamiento mínimos
 - 1 PERSEUS
