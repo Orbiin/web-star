@@ -4,11 +4,12 @@ estado: activo
 parche: [5.0.0]
 objetivo: Despliegue de flota en Pyro IV para coger una tarjeta y enfrentarse al Valakkar, la gigantesca criatura vinculada a Project Lazarus.
 
-requisitos: 🎖️ Rango mínimo: Ninguno
-sistema: Pyro
-planeta: Pyro IV
+requisitos: Rango mínimo: Ninguno
 jugadores: Mínimo 3 jugadores
 recompensas: Dientes y perlas del VALAKKAR IRRADIADO
+---
+sistema: Pyro
+planeta: Pyro IV
 ---
 ## Antes de empezar
 - Armadura y armamento pesado.
