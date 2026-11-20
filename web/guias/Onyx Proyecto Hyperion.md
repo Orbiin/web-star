@@ -41,17 +41,17 @@ recompensas: Armaduras/Objetos Wikelo
 18. Obtener 1 de los 3 catalizadores, se explican en los siguientes pasos
 19. Habrá que ir al ala de RESEARCH
 
-20. CATALIZADOR 1 XTL:
+- CATALIZADOR 1 XTL:
 
 Bajar al piso inferior el introducir 5 cuerpos al modulo de biomasa en la planta 7
 Bajar la palanca e ir a al ordenador para descargar los datos en la planta 6
 
-21. CATALIZADOR 2 XTL:
+- CATALIZADOR 2 XTL:
 
 Bajar al laboratorio de gravedad en la planta 6
 Estabilizar la anomalia y recoger los datos del cientifico
 
-22. CATALIZADOR 3 RGL:
+- CATALIZADOR 3 RGL:
 
 Bajar al laboratorio medico en la planta 8
 Descargar los datos del ordenador
