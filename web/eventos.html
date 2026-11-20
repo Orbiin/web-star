@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>SC HUB · Eventos</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060b11;--panel:#0f1b25;--line:#1a3544;--txt:#d6e4ee;--mut:#8aa0b2;--cy:#3fd6e8;--gr:#4fd68a;--am:#ffb43a;--rd:#ff6b5e}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 80% 0,rgba(122,77,255,.12),transparent 40%),radial-gradient(circle at 10% 90%,rgba(63,214,232,.09),transparent 40%),var(--bg);color:var(--txt);font-family:'Chakra Petch',system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:20px}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--cy);box-shadow:0 8px 20px -14px var(--cy)}
+.logo{font-size:20px;font-weight:700;letter-spacing:.14em;color:var(--cy);text-shadow:0 0 14px var(--cy)}
+.nl{padding:8px 14px;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;text-decoration:none;font-size:14px}
+.nl.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12)}
+.info{margin-left:auto;font-size:13px;color:var(--mut)}
+.info b{font-family:'JetBrains Mono',monospace;color:var(--txt)}
+h1{margin:22px 0 6px;font-size:34px;text-shadow:0 0 24px rgba(63,214,232,.4)}
+.sub{margin:0 0 18px;color:var(--mut)}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:18px}
+label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+input,select{height:44px;padding:0 12px;background:#08111a;border:1px solid #1d5b69;border-radius:6px;color:var(--txt);font-family:inherit;font-size:15px}
+input:focus,select:focus{outline:2px solid var(--cy)}
+.card{background:linear-gradient(180deg,#0f1b25,#0a131b);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:980px}
+th{padding:11px 12px;text-align:left;font:600 11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);background:rgba(63,214,232,.07);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid #16303d;font-size:14px;vertical-align:top}
+tr:first-child td{background:rgba(63,214,232,.08)}
+.n{font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.m{color:var(--mut);font-size:12px}
+.g{color:var(--gr)}.a{color:var(--am)}.r{color:var(--rd)}
+.empty{padding:30px;text-align:center;color:var(--mut)}
+footer{margin:22px 0;color:var(--mut);font-size:12px;line-height:1.6}
+a{color:var(--cy)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.tab{min-height:44px;padding:0 20px;background:#0d1a24;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;font-family:inherit;font-size:15px;cursor:pointer}
+.tab.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12);text-shadow:0 0 10px var(--cy)}
+.note{font-size:12px;color:var(--am)}
+
+.layout{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.list{flex:1 1 280px;max-width:340px}
+.detail{flex:3 1 480px;min-width:0}
+.gi{display:block;width:100%;text-align:left;padding:14px 18px;background:none;border:0;border-bottom:1px solid var(--line);color:var(--txt);font-family:inherit;font-size:15px;cursor:pointer}
+.gi:hover{background:rgba(63,214,232,.07)}
+.gi.on{background:rgba(63,214,232,.14);box-shadow:inset 3px 0 0 var(--cy)}
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;border:1px solid}
+.b-on{color:var(--gr);border-color:#1d6a45}.b-off{color:var(--mut);border-color:#24465a}
+.prose{padding:6px 24px 22px;line-height:1.65}
+.prose h2,.prose h3{color:var(--cy);margin:22px 0 8px;font-family:'JetBrains Mono',monospace;font-size:14px;letter-spacing:.12em;text-transform:uppercase}
+.prose ol,.prose ul{padding-left:22px}.prose li{margin:6px 0}
+.prose ol li::marker{color:var(--cy);font-weight:700}
+.prose blockquote{margin:14px 0;padding:10px 16px;border-left:3px solid var(--am);background:rgba(255,180,58,.08);border-radius:4px}
+.prose code{background:#10202c;padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px}
+.tiles{display:flex;flex-wrap:wrap;gap:10px;padding:0 24px}
+.tile{flex:1 1 160px;padding:10px 12px;background:#0b141c;border:1px solid #1f3a4a;border-left:3px solid var(--cy);border-radius:4px}
+.tile span{display:block;font:11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><span class="logo">SC HUB</span><a class="nl" href="./">Comercio</a><a class="nl" href="naves.html">Naves</a><a class="nl on" href="eventos.html">Eventos</a><span class="info" id="info"></span></div>
+<h1>Eventos</h1>
+<p class="sub">Guías paso a paso escritas por la comunidad.</p>
+<div class="filters">
+<div><label for="q">Buscar</label><input id="q" placeholder="Nombre del evento…" style="width:240px" autocomplete="off"></div>
+<div><label for="st">Estado</label><select id="st"><option value="">Todos</option><option value="activo">Activos</option><option value="inactivo">Inactivos</option></select></div>
+</div>
+<div class="layout">
+<section class="card list"><div id="list"><p class="empty">Cargando…</p></div></section>
+<section class="card detail" id="detail"></section>
+</div>
+<footer>Web privada y no oficial de la comunidad. Star Citizen es una marca de Cloud Imperium Rights LLC. Las guías las escribís vosotros: revisa siempre el parche en el que se comprobaron.</footer>
+</div>
+<script>
+const REPO = 'Orbiin/web-star';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function inline(s) {
+  return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+function md(t) {
+  let h = '', list = null, para = [];
+  const fp = () => { if (para.length) { h += '<p>' + inline(para.join(' ')) + '</p>'; para = []; } };
+  const fl = () => { if (list) { h += '</' + list + '>'; list = null; } };
+  for (const raw of t.split('\n')) {
+    const l = raw.trimEnd(); let m;
+    if (!l.trim()) { fp(); fl(); continue; }
+    if ((m = l.match(/^(#{2,3})\s+(.*)/))) { fp(); fl(); h += '<h' + m[1].length + '>' + inline(m[2]) + '</h' + m[1].length + '>'; continue; }
+    if ((m = l.match(/^[-*]\s+(.*)/))) { fp(); if (list !== 'ul') { fl(); h += '<ul>'; list = 'ul'; } h += '<li>' + inline(m[1]) + '</li>'; continue; }
+    if ((m = l.match(/^\d+\.\s+(.*)/))) { fp(); if (list !== 'ol') { fl(); h += '<ol>'; list = 'ol'; } h += '<li>' + inline(m[1]) + '</li>'; continue; }
+    if ((m = l.match(/^>\s?(.*)/))) { fp(); fl(); h += '<blockquote>' + inline(m[1]) + '</blockquote>'; continue; }
+    fl(); para.push(l.trim());
+  }
+  fp(); fl(); return h;
+}
+let G = [], SEL = null;
+const badge = g => '<span class="badge ' + (g.status === 'activo' ? 'b-on">● Activo' : 'b-off">○ Inactivo') + '</span>';
+
+function renderList() {
+  const q = $('q').value.trim().toLowerCase(), st = $('st').value;
+  const rows = G.filter(g => (!q || (g.title + ' ' + g.summary).toLowerCase().includes(q)) && (!st || g.status === st));
+  $('list').innerHTML = rows.length ? rows.map(g => '<button class="gi' + (g.slug === SEL ? ' on' : '') + '" data-slug="' + esc(g.slug) + '"><b>' + esc(g.title) + '</b><br>' + badge(g) + (g.patch ? ' <span class="m">parche ' + esc(g.patch) + '</span>' : '') + '</button>').join('')
+    : '<p class="empty">No hay guías con este filtro.</p>';
+}
+function renderDetail() {
+  const g = G.find(x => x.slug === SEL);
+  if (!g) { $('detail').innerHTML = '<p class="empty">Elige una guía de la lista.</p>'; return; }
+  const tile = (a, b) => b ? '<div class="tile"><span>' + a + '</span>' + esc(b) + '</div>' : '';
+  $('detail').innerHTML = '<div style="padding:22px 24px 12px"><div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><h1 style="margin:0;font-size:30px">' + esc(g.title) + '</h1>' + badge(g) +
+    (g.patch ? '<span class="m" style="margin-left:auto">Revisada en el parche ' + esc(g.patch) + '</span>' : '') + '</div>' +
+    (g.summary ? '<p class="m" style="margin:10px 0 0">' + esc(g.summary) + '</p>' : '') + '</div>' +
+    '<div class="tiles">' + tile('Requisitos', g.requirements) + tile('Jugadores', g.players) + tile('Recompensas', g.rewards) + '</div>' +
+    '<div class="prose">' + md(g.body) + '</div>' +
+    '<div style="padding:0 24px 20px" class="m"><a href="https://github.com/' + REPO + '/edit/main/web/guias/' + encodeURIComponent(g.slug) + '.md" target="_blank" rel="noopener">✎ Editar esta guía</a> (hace falta acceso al repositorio)</div>';
+}
+function select(slug) { SEL = slug; try { history.replaceState(null, '', '#' + slug); } catch (e) {} renderList(); renderDetail(); }
+async function init() {
+  try {
+    const r = await fetch('data/guides.json', {cache: 'no-store'});
+    if (!r.ok) throw new Error('HTTP');
+    G = await r.json();
+  } catch (e) { $('list').innerHTML = '<p class="empty">No se pudieron cargar las guías.</p>'; return; }
+  if (!G.length) { $('list').innerHTML = '<p class="empty">Aún no hay guías. Añade archivos .md en la carpeta web/guias del repositorio.</p>'; return; }
+  const hash = decodeURIComponent(location.hash.slice(1));
+  SEL = G.some(g => g.slug === hash) ? hash : G[0].slug;
+  $('info').textContent = G.length + ' guías';
+  renderList(); renderDetail();
+  $('q').addEventListener('input', renderList); $('st').addEventListener('change', renderList);
+  $('list').addEventListener('click', ev => { const b = ev.target.closest('[data-slug]'); if (b) select(b.dataset.slug); });
+}
+init();
+</script>
+</body>
+</html>
