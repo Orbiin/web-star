@@ -13,6 +13,8 @@ body{margin:0;background:radial-gradient(circle at 80% 0,rgba(122,77,255,.12),tr
 .wrap{max-width:1240px;margin:0 auto;padding:20px}
 .top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--cy);box-shadow:0 8px 20px -14px var(--cy)}
 .logo{font-size:20px;font-weight:700;letter-spacing:.14em;color:var(--cy);text-shadow:0 0 14px var(--cy)}
+.sortb{background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:0}
+.sortb:hover,.sortb:focus-visible{color:#fff;text-shadow:0 0 8px var(--cy)}
 .nl{padding:8px 14px;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;text-decoration:none;font-size:14px}
 .nl.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12)}
 .info{margin-left:auto;font-size:13px;color:var(--mut)}
@@ -67,13 +69,18 @@ function load(k, d) { try { const v = localStorage.getItem(k); return v === null
 function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 // Filtro de antigüedad desactivado. Para volver a activarlo: cambia false por true.
 const AGE_FILTER = false;
-let DATA, META, EXTRA = 0, MODE = 'routes';
+let DATA, META, EXTRA = 0, MODE = 'routes', AGE_SORT = null;  // AGE_SORT: null | 'new' (recientes primero) | 'old'
 const IDS = ['com', 'scu', 'cash', 'sys', 'age', 'sort'];
 const SORTS = {routes: [['total', 'Beneficio total'], ['per', 'Beneficio por SCU'], ['pct', 'Beneficio %']], sell: [['price', 'Precio más alto'], ['total', 'Ingreso total']], buy: [['price', 'Precio más bajo'], ['stock', 'Más stock']]};
 const SHOW = {routes: ['scu', 'cash', 'sys', 'age', 'sort'], sell: ['com', 'scu', 'sys', 'age', 'sort'], buy: ['com', 'scu', 'cash', 'sys', 'age', 'sort']};
 const SCULAB = {routes: 'Capacidad (SCU)', sell: 'SCU que tienes', buy: 'SCU que quieres'};
 const SUB = {routes: 'Mejor terminal para comprar, mejor para vender, y cuántos SCU puedes mover de verdad.', sell: 'Elige la mercancía que llevas y mira dónde te pagan más por ella.', buy: 'Elige una mercancía y mira dónde comprarla más barata, con su stock.'};
 
+const ageCmp = (a, b) => (a === b ? 0 : AGE_SORT === 'old' ? b - a : a - b);
+function ageHead() {
+  const arrow = AGE_SORT === 'new' ? ' ▲' : AGE_SORT === 'old' ? ' ▼' : ' ⇅';
+  return '<button class="sortb" data-agesort title="Ordenar por antigüedad del dato">Dato' + arrow + '</button>';
+}
 function ageOf(e) { return e.age_h == null ? Infinity : e.age_h + EXTRA; }
 function ageText(h) {
   if (!isFinite(h)) return 'sin fecha';
@@ -87,7 +94,7 @@ function ok(e) { const sys = $('sys').value; return (!sys || e.system === sys) &
 function msg(t) { $('out').innerHTML = '<p class="empty">' + t + '</p>'; }
 
 function setMode(m) {
-  MODE = m; save('sch_mode', m);
+  MODE = m; AGE_SORT = null; save('sch_mode', m);
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.m === m));
   IDS.forEach(k => { $('f-' + k).style.display = SHOW[m].includes(k) && (k !== 'age' || AGE_FILTER) ? '' : 'none'; });
   $('lab-scu').textContent = SCULAB[m]; $('sub').textContent = SUB[m];
@@ -113,8 +120,9 @@ function renderRoutes() {
     if (best) routes.push(best);
   }
   routes.sort((x, y) => y[sort] - x[sort]);
+  if (AGE_SORT) routes.sort((x, y) => ageCmp(x.age, y.age));
   if (!routes.length) return msg('No hay rutas con estos filtros. Prueba a cambiar de sistema o a subir tu capital.');
-  $('out').innerHTML = '<table><thead><tr><th>Mercancía</th><th>Comprar en (más barato)</th><th>Stock</th><th>Vender en (más caro)</th><th>Demanda</th><th>SCU a cargar</th><th>Por SCU</th><th>Margen %</th><th>Total</th><th>Dato</th></tr></thead><tbody>' +
+  $('out').innerHTML = '<table><thead><tr><th>Mercancía</th><th>Comprar en (más barato)</th><th>Stock</th><th>Vender en (más caro)</th><th>Demanda</th><th>SCU a cargar</th><th>Por SCU</th><th>Margen %</th><th>Total</th><th>' + ageHead() + '</th></tr></thead><tbody>' +
     routes.slice(0, 100).map(r => '<tr><td><b>' + esc(r.name) + '</b></td><td>' + where(r.b) + '<div class="n m">' + fmt(r.b.price) + ' /SCU</div></td><td class="n">' + (r.b.scu == null ? '?' : fmt(r.b.scu)) + '</td><td>' + where(r.s) + '<div class="n m">' + fmt(r.s.price) + ' /SCU</div></td><td class="n">' + (r.s.demand == null ? '?' : fmt(r.s.demand)) + '</td><td class="n">' + fmt(r.scu) + '</td><td class="n g">+ ' + fmt(r.per) + '</td><td class="n g">' + r.pct.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' %</td><td class="n g"><b>' + fmt(r.total) + '</b></td><td>' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
 }
 
@@ -131,8 +139,9 @@ function renderList() {
     return {e, lim, n, total: e.price * n, age: ageOf(e)};
   });
   rows.sort((x, y) => sort === 'total' ? y.total - x.total : sort === 'stock' ? (y.lim || 0) - (x.lim || 0) : sell ? y.e.price - x.e.price : x.e.price - y.e.price);
+  if (AGE_SORT) rows.sort((x, y) => ageCmp(x.age, y.age));
   if (!rows.length) return msg('No hay datos de ' + esc(c.name) + ' con estos filtros. Prueba a cambiar de sistema.');
-  $('out').innerHTML = '<table><thead><tr><th>Terminal</th><th>Precio /SCU</th><th>' + (sell ? 'Demanda' : 'Stock') + '</th><th>' + (sell ? 'Puedes vender' : 'Puedes comprar') + '</th><th>' + (sell ? 'Ingreso' : 'Coste') + '</th><th>Dato</th></tr></thead><tbody>' +
+  $('out').innerHTML = '<table><thead><tr><th>Terminal</th><th>Precio /SCU</th><th>' + (sell ? 'Demanda' : 'Stock') + '</th><th>' + (sell ? 'Puedes vender' : 'Puedes comprar') + '</th><th>' + (sell ? 'Ingreso' : 'Coste') + '</th><th>' + ageHead() + '</th></tr></thead><tbody>' +
     rows.slice(0, 60).map(r => '<tr><td>' + where(r.e) + '</td><td class="n ' + (sell ? 'g' : '') + '"><b>' + fmt(r.e.price) + '</b></td><td class="n">' + (r.lim == null ? '?' : fmt(r.lim)) + '</td><td class="n">' + fmt(r.n) + (qty && r.n < qty ? '<div class="note">solo ' + fmt(r.n) + ' de ' + fmt(qty) + '</div>' : '') + '</td><td class="n">' + (r.n ? fmt(r.total) : '—') + '</td><td>' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
 }
 
@@ -155,7 +164,8 @@ async function init() {
   $('coms').innerHTML = DATA.commodities.map(c => c.name).sort().map(n => '<option value="' + esc(n) + '">').join('');
   IDS.forEach(k => { if (k !== 'sort') { const v = load('sch_' + k, null); if (v !== null) $(k).value = v; } });
   ['com', 'scu', 'cash'].forEach(k => $(k).addEventListener('input', render));
-  ['age', 'sort', 'sys'].forEach(k => $(k).addEventListener('change', render));
+  ['age', 'sort', 'sys'].forEach(k => $(k).addEventListener('change', () => { if (k === 'sort') AGE_SORT = null; render(); }));
+  $('out').addEventListener('click', ev => { if (ev.target.closest('[data-agesort]')) { AGE_SORT = AGE_SORT === null ? 'new' : AGE_SORT === 'new' ? 'old' : null; render(); } });
   document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
   const v = META.game_versions && META.game_versions.live;
   $('info').innerHTML = (v ? 'Parche <b>' + esc(v) + '</b> · ' : '') + 'datos de hace <b>' + ageText(EXTRA) + '</b> · <b>' + (META.fresh_under_24h_percent == null ? '?' : META.fresh_under_24h_percent) + '%</b> de los precios, de menos de 24 h';
