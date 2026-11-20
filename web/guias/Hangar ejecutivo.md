@@ -1,7 +1,7 @@
 ---
 titulo: HANGAR EJECUTIVO
 estado: activo
-parche: [5.0.0]
+parche: 5.0.0
 objetivo: Conseguir las 7 tarjetas
 requisitos: Rango mínimo: Operative
 jugadores: 2-4/4 recomendado
