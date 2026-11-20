@@ -8,8 +8,8 @@ requisitos: Rango mínimo: Ninguno
 jugadores: Mínimo 3 jugadores
 recompensas: Dientes y perlas del VALAKKAR IRRADIADO
 ---
-sistema: Pyro
-planeta: Pyro IV
+> 🌌Sistema Pyro
+> 🪐Planeta: Pyro IV
 ---
 ## Antes de empezar
 - Armadura y armamento pesado.
