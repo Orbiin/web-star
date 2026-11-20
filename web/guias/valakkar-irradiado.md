@@ -1,7 +1,7 @@
 ---
 titulo: 🪱 PROJECT LAZARUS — APEX VALAKKAR 
 estado: activo
-parche: [5.0.0]
+parche: 5.0.0
 objetivo: Despliegue de flota en Pyro IV para coger una tarjeta y enfrentarse al Valakkar, la gigantesca criatura vinculada a Project Lazarus.
 
 requisitos: Rango mínimo: Ninguno
