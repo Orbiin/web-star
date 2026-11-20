@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>SC HUB · Naves</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060b11;--panel:#0f1b25;--line:#1a3544;--txt:#d6e4ee;--mut:#8aa0b2;--cy:#3fd6e8;--gr:#4fd68a;--am:#ffb43a;--rd:#ff6b5e}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 80% 0,rgba(122,77,255,.12),transparent 40%),radial-gradient(circle at 10% 90%,rgba(63,214,232,.09),transparent 40%),var(--bg);color:var(--txt);font-family:'Chakra Petch',system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:20px}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--cy);box-shadow:0 8px 20px -14px var(--cy)}
+.logo{font-size:20px;font-weight:700;letter-spacing:.14em;color:var(--cy);text-shadow:0 0 14px var(--cy)}
+.nl{padding:8px 14px;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;text-decoration:none;font-size:14px}
+.nl.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12)}
+.info{margin-left:auto;font-size:13px;color:var(--mut)}
+.info b{font-family:'JetBrains Mono',monospace;color:var(--txt)}
+h1{margin:22px 0 6px;font-size:34px;text-shadow:0 0 24px rgba(63,214,232,.4)}
+.sub{margin:0 0 18px;color:var(--mut)}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:18px}
+label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+input,select{height:44px;padding:0 12px;background:#08111a;border:1px solid #1d5b69;border-radius:6px;color:var(--txt);font-family:inherit;font-size:15px}
+input:focus,select:focus{outline:2px solid var(--cy)}
+.card{background:linear-gradient(180deg,#0f1b25,#0a131b);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:980px}
+th{padding:11px 12px;text-align:left;font:600 11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);background:rgba(63,214,232,.07);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid #16303d;font-size:14px;vertical-align:top}
+tr:first-child td{background:rgba(63,214,232,.08)}
+.n{font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.m{color:var(--mut);font-size:12px}
+.g{color:var(--gr)}.a{color:var(--am)}.r{color:var(--rd)}
+.empty{padding:30px;text-align:center;color:var(--mut)}
+footer{margin:22px 0;color:var(--mut);font-size:12px;line-height:1.6}
+a{color:var(--cy)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.tab{min-height:44px;padding:0 20px;background:#0d1a24;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;font-family:inherit;font-size:15px;cursor:pointer}
+.tab.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12);text-shadow:0 0 10px var(--cy)}
+.note{font-size:12px;color:var(--am)}
+
+.nl.on{border-color:var(--cy);color:var(--cy)}
+a.nl:hover{border-color:var(--cy)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{padding:3px 10px;border-radius:12px;font-size:12px;background:#10202c;border:1px solid #1d5b69;color:#9fe9f3}
+.lk{background:none;border:0;padding:0;color:var(--txt);font:600 15px 'Chakra Petch',sans-serif;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:#1d5b69;text-underline-offset:4px}
+.lk:hover,.lk:focus-visible{color:var(--cy)}
+.hero{display:flex;flex-wrap:wrap}
+.pic{flex:1 1 280px;min-height:170px;position:relative;background:#08121b}
+.pic img,.pic svg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.info2{flex:2 1 340px;padding:20px 24px}
+.tiles{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.tile{flex:1 1 110px;padding:10px 12px;background:#0b141c;border:1px solid #1f3a4a;border-left:3px solid var(--cy);border-radius:4px}
+.tile b{display:block;font:600 20px 'JetBrains Mono',monospace}
+.tile span{font:11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.back{min-height:40px;padding:0 16px;background:transparent;border:1px solid #1d5b69;color:var(--cy);border-radius:6px;font-family:inherit;cursor:pointer}
+h2{margin:0;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);font-family:'JetBrains Mono',monospace}
+.sec{padding:16px 18px;border-bottom:1px solid var(--line)}
+.stack{display:flex;flex-direction:column;gap:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><span class="logo">SC HUB</span><a class="nl" href="./">Comercio</a><a class="nl on" href="naves.html">Naves</a><span class="info" id="info">Cargando…</span></div>
+<h1>Naves</h1>
+<p class="sub">Busca una nave y mira dónde comprarla o alquilarla, y a qué precio.</p>
+<div class="filters">
+<div><label for="q">Buscar nave</label><input id="q" list="ships" placeholder="Escribe un nombre…" style="width:260px" autocomplete="off"><datalist id="ships"></datalist></div>
+<div id="f-maker"><label for="maker">Fabricante</label><select id="maker"><option value="">Todos</option></select></div>
+<div id="f-tag"><label for="tag">Tipo</label><select id="tag"><option value="">Todos</option></select></div>
+<div><label for="sys">Sistema</label><select id="sys"><option value="">Todos</option></select></div>
+<div id="f-sort"><label for="sort">Ordenar por</label><select id="sort"><option value="name">Nombre</option><option value="buy">Compra más barata</option><option value="rent">Alquiler más barato</option><option value="scu">Más SCU</option></select></div>
+</div>
+<div id="out"><p class="empty">Cargando datos…</p></div>
+<footer>Web privada y no oficial de la comunidad. Star Citizen es una marca de Cloud Imperium Rights LLC. Los precios provienen de <a href="https://uexcorp.space" target="_blank" rel="noopener">UEX Corp</a> y los aportan los jugadores. El periodo del precio de alquiler no está confirmado en los datos.</footer>
+</div>
+<script>
+// true = muestra la foto de UEX en la ficha (enlazada desde su servidor). Revisa antes los derechos de las imágenes.
+const USE_PHOTOS = false;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 0});
+function load(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+let DATA, META, EXTRA = 0;
+
+function ageOf(e) { return e.age_h == null ? Infinity : e.age_h + EXTRA; }
+function ageText(h) {
+  if (!isFinite(h)) return 'sin fecha';
+  if (h < 1) return Math.max(1, Math.round(h * 60)) + ' min';
+  if (h < 48) return Math.round(h) + ' h';
+  return Math.round(h / 24) + ' d';
+}
+const dot = h => '<span class="' + (h < 1 ? 'g' : h < 24 ? 'a' : 'r') + '">● ' + ageText(h) + '</span>';
+const sysOk = e => !$('sys').value || e.system === $('sys').value;
+const cheapest = list => list.filter(sysOk)[0] || null;
+const priceCell = e => e ? '<b class="n">' + fmt(e.price) + '</b><div class="m">' + esc(e.terminal) + '</div>' : '<span class="m">—</span>';
+function find(q) {
+  q = q.trim().toLowerCase(); if (!q) return null;
+  return DATA.ships.find(s => (s.full || '').toLowerCase() === q) || DATA.ships.find(s => (s.name || '').toLowerCase() === q) || null;
+}
+function msg(t) { $('out').innerHTML = '<p class="empty">' + t + '</p>'; }
+
+function table(list, what) {
+  const rows = list.filter(sysOk);
+  if (!rows.length) return '<p class="empty">' + what + '</p>';
+  return '<div class="scroll"><table style="min-width:560px"><thead><tr><th>Terminal</th><th>Lugar</th><th>Precio (aUEC)</th><th>Dato</th></tr></thead><tbody>' +
+    rows.map(e => '<tr><td><b>' + esc(e.terminal) + '</b></td><td>' + esc([e.place, e.system].filter(Boolean).join(' · ')) + '</td><td class="n g"><b>' + fmt(e.price) + '</b></td><td>' + dot(ageOf(e)) + '</td></tr>').join('') + '</tbody></table></div>';
+}
+
+function renderDetail(s) {
+  const dims = (s.size || []).filter(x => x > 0);
+  const art = '<svg viewBox="0 0 360 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><radialGradient id="a" cx="60%" cy="50%" r="60%"><stop offset="0" stop-color="#3fd6e8" stop-opacity=".4"/><stop offset="1" stop-color="#3fd6e8" stop-opacity="0"/></radialGradient></defs><rect width="360" height="170" fill="#08121b"/><rect width="360" height="170" fill="url(#a)"/><g transform="translate(70 40)"><ellipse cx="-4" cy="55" rx="34" ry="7" fill="#3fd6e8" opacity=".7"/><polygon points="0,55 90,40 175,47 215,55 175,63 90,70" fill="#aebfcb"/><polygon points="90,40 66,12 122,36" fill="#7e93a3"/><polygon points="90,70 66,98 122,74" fill="#6a7f8f"/></g></svg>';
+  const pic = USE_PHOTOS && s.photo ? '<img src="' + esc(s.photo) + '" alt="" referrerpolicy="no-referrer">' : art;
+  const tile = (a, b) => '<div class="tile"><b>' + esc(b) + '</b><span>' + a + '</span></div>';
+  $('out').innerHTML = '<div class="stack"><div><button class="back" id="back">← Volver a la lista</button></div>' +
+    '<section class="card hero"><div class="pic">' + pic + '</div><div class="info2"><div class="m">' + esc(s.maker || '') + '</div><h1 style="margin:2px 0 6px;font-size:32px">' + esc(s.full || s.name) + '</h1>' +
+    '<div class="chips">' + (s.tags || []).map(t => '<span class="chip">' + esc(t) + '</span>').join('') + '</div>' +
+    '<div class="tiles">' + tile('SCU', s.scu == null ? '—' : fmt(s.scu)) + tile('Tripulación', s.crew || '—') + tile('Masa (kg)', s.mass ? fmt(s.mass) : '—') + tile('Dimensiones (m)', dims.length ? dims.join(' × ') : '—') + tile('Plataforma', s.pad || '—') + '</div>' +
+    (s.store ? '<p style="margin:14px 0 0"><a href="' + esc(s.store) + '" target="_blank" rel="noopener">Ficha en la tienda de RSI ↗</a></p>' : '') + '</div></section>' +
+    '<section class="card"><div class="sec"><h2>Dónde comprarla</h2></div>' + table(s.buy, 'No hay datos de compra por aUEC en este filtro. Puede que solo se venda con dinero real.') + '</section>' +
+    '<section class="card"><div class="sec"><h2>Dónde alquilarla</h2></div>' + table(s.rent, 'No hay datos de alquiler en este filtro.') + '</section></div>';
+  $('back').addEventListener('click', () => { $('q').value = ''; render(); window.scrollTo(0, 0); });
+}
+
+function renderList() {
+  const q = $('q').value.trim().toLowerCase(), mk = $('maker').value, tg = $('tag').value, sort = $('sort').value;
+  let rows = DATA.ships.filter(s => (!q || ((s.full || '') + ' ' + (s.name || '') + ' ' + (s.maker || '')).toLowerCase().includes(q)) && (!mk || s.maker === mk) && (!tg || s.tags.includes(tg)))
+    .map(s => ({s, b: cheapest(s.buy), r: cheapest(s.rent)}));
+  const key = {buy: x => x.b ? x.b.price : Infinity, rent: x => x.r ? x.r.price : Infinity};
+  if (sort === 'buy' || sort === 'rent') rows.sort((x, y) => key[sort](x) - key[sort](y));
+  else if (sort === 'scu') rows.sort((x, y) => (y.s.scu || 0) - (x.s.scu || 0));
+  if (!rows.length) return msg('No hay naves con estos filtros.');
+  $('out').innerHTML = '<section class="card"><div class="scroll"><table style="min-width:860px"><thead><tr><th>Nave</th><th>Fabricante</th><th>SCU</th><th>Tripulación</th><th>Tipo</th><th>Compra desde</th><th>Alquiler desde</th></tr></thead><tbody>' +
+    rows.slice(0, 300).map(x => '<tr><td><button class="lk" data-pick="' + esc(x.s.full || x.s.name) + '">' + esc(x.s.full || x.s.name) + '</button></td><td>' + esc(x.s.maker || '') + '</td><td class="n">' + (x.s.scu == null ? '—' : fmt(x.s.scu)) + '</td><td class="n">' + esc(x.s.crew || '—') + '</td><td class="m">' + esc((x.s.tags || []).slice(0, 3).join(', ')) + '</td><td>' + priceCell(x.b) + '</td><td>' + priceCell(x.r) + '</td></tr>').join('') + '</tbody></table></div></section>';
+}
+
+function render() {
+  ['maker', 'tag', 'sys', 'sort'].forEach(k => save('sn_' + k, $(k).value));
+  const s = find($('q').value);
+  ['f-maker', 'f-tag', 'f-sort'].forEach(id => { $(id).style.display = s ? 'none' : ''; });
+  if (s) renderDetail(s); else renderList();
+}
+
+async function init() {
+  try {
+    const [a, b] = await Promise.all([fetch('data/ships.json', {cache: 'no-store'}), fetch('data/meta.json', {cache: 'no-store'})]);
+    if (!a.ok) throw new Error('HTTP');
+    DATA = await a.json(); META = b.ok ? await b.json() : {};
+  } catch (e) { msg('No se pudieron cargar los datos de naves. Inténtalo de nuevo en unos minutos.'); $('info').textContent = 'Sin datos'; return; }
+  EXTRA = Math.max(0, (Date.now() - Date.parse(DATA.generated_at)) / 36e5);
+  const uniq = f => [...new Set(DATA.ships.flatMap(f).filter(Boolean))].sort();
+  const opts = (id, list) => list.forEach(v => $(id).insertAdjacentHTML('beforeend', '<option>' + esc(v) + '</option>'));
+  opts('maker', uniq(s => [s.maker])); opts('tag', uniq(s => s.tags || []));
+  opts('sys', uniq(s => s.buy.concat(s.rent).map(e => e.system)));
+  $('ships').innerHTML = DATA.ships.map(s => '<option value="' + esc(s.full || s.name) + '">').join('');
+  ['maker', 'tag', 'sys', 'sort'].forEach(k => { const v = load('sn_' + k, null); if (v !== null) $(k).value = v; });
+  $('q').addEventListener('input', render);
+  ['maker', 'tag', 'sys', 'sort'].forEach(k => $(k).addEventListener('change', render));
+  $('out').addEventListener('click', ev => { const b = ev.target.closest('[data-pick]'); if (b) { $('q').value = b.dataset.pick; render(); window.scrollTo(0, 0); } });
+  const v = META.game_versions && META.game_versions.live;
+  $('info').innerHTML = (v ? 'Parche <b>' + esc(v) + '</b> · ' : '') + 'datos de hace <b>' + ageText(EXTRA) + '</b>';
+  render();
+}
+init();
+</script>
+</body>
+</html>
