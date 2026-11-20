@@ -6,6 +6,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      force_static:
+        description: "Forzar la descarga de naves (normalmente solo con parche nuevo)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -28,9 +33,12 @@ jobs:
         with:
           python-version: "3.12"
       - name: Recoger datos (si falla, no se publica y se queda la version anterior)
-        run: python collector/collect.py
+        run: |
+          export PREV_BASE="https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}/data"
+          python collector/collect.py
         env:
           UEX_TOKEN: ${{ secrets.UEX_TOKEN }}
+          FORCE_STATIC: ${{ inputs.force_static }}
       - name: Copiar la web si existe
         run: if [ -d web ]; then cp -r web/. site/; fi
       - uses: actions/configure-pages@v6
