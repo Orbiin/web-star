@@ -6,6 +6,7 @@ objetivo: Localizar y acabar con Mendo Ren
 requisitos: Rango mínimo: Operative
 jugadores: 2-4/ 4 recomendado
 recompensas: Armadura super pesada y su BP
+imagen: SiegeoforisonPortada.png
 ---
 > 🌌Sistema Stanton
 > 🪐Planeta: Crusader - Orison
