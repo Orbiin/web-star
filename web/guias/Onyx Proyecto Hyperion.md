@@ -1,7 +1,7 @@
 ---
 titulo: ONYX "PROYECTO HYPERION"
 estado: activo
-parche: [5.0.0]
+parche: 5.0.0
 objetivo: Infiltrarse en las instalaciones abandonadas de ASD Onyx e investigar los experimentos realizados por Associated Sciences & Development.
 requisitos: Completar todas las misiones
 jugadores: Solo/Grupo
@@ -38,23 +38,22 @@ recompensas: Armaduras/Objetos Wikelo
 15. Activar las palancas de las plataformas en orden del 1 al 6
 16. Activar cualquiera de los 3 codigos, para ello, habrá que acercarse a cualquiera de ellos y en una pantalla antes de llegar habrá que darle para que se conecte y luego ir a la del codigo y descargar los datos
 17. Ir a la salida del nucleo, puerta que ponga ASD en la pared
-18. Obtener 1 de los 3 catalizadores, se explican en los siguientes pasos
-19. Habrá que ir al ala de RESEARCH
-23. Bajar hasta el ascensor princial del patio central en la planta 9
-24. Sube a la planta 1
-25. Gira a la izquierda y baja por el agujero
-26. Avanza hasta llegar al ascensor que te llevara al SITE-B
-27. Avanza acabando con los NPC hasta llegar al proximo ascensor
-28. Acabar con los NPC y llegar a la pasarela en la cual habrá NPC
-29. Avanzar por la pasarela y al llegar al final dirigirse a la derecha acabando con los NPC que haya
-30. Luego giraremos a la izquierda y seguiremos avanzando acabando los todos los NPC que haya hasta llegar a una sala con un mostrador
-31. Ahí habra que matar a los NPC y conseguir el código de la puerta que se encuentra en la parte superior del interior del mostrador
-32. Ingresar el código en la puerta roja y avanzar matando a los NPC
-33. Llegar a la puerta de la anticamara
-34. En la puerta grande que habrá al fondo de la sala, cuando se abrá por proximidad, apareceran unos NPC que habrá que matar
-35. Avanzar hasta llegar al laboratorio y subir a la planta de arriba para activar el terminal y proceder con el experimento
-36. Descarga los resultados (estos se enviarán a tu base principal)
-37. Extraer
+18. Obtener 1 de los 3 catalizadores, estos se encuentran en la sala de *RESEARCH*. **Abajo del todo se explica donde están los catalizadores**
+20. Bajar hasta el ascensor princial del patio central en la planta 9
+21. Sube a la planta 1
+22. Gira a la izquierda y baja por el agujero
+23. Avanza hasta llegar al ascensor que te llevara al SITE-B
+24. Avanza acabando con los NPC hasta llegar al proximo ascensor
+25. Acabar con los NPC y llegar a la pasarela en la cual habrá NPC
+26. Avanzar por la pasarela y al llegar al final dirigirse a la derecha acabando con los NPC que haya
+27. Luego giraremos a la izquierda y seguiremos avanzando acabando los todos los NPC que haya hasta llegar a una sala con un mostrador
+28. Ahí habra que matar a los NPC y conseguir el código de la puerta que se encuentra en la parte superior del interior del mostrador
+29. Ingresar el código en la puerta roja y avanzar matando a los NPC
+30. Llegar a la puerta de la anticamara
+31. En la puerta grande que habrá al fondo de la sala, cuando se abrá por proximidad, apareceran unos NPC que habrá que matar
+32. Avanzar hasta llegar al laboratorio y subir a la planta de arriba para activar el terminal y proceder con el experimento
+33. Descarga los resultados (estos se enviarán a tu base principal)
+34. Extraer
 
 
 - CATALIZADOR 1 XTL:
