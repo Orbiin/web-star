@@ -4,9 +4,9 @@ estado: activo
 parche: [5.0.0]
 objetivo: Seguir el rastro de una operación de contrabando relacionada con tecnología Vanduul y descubrir qué ocurrió en las instalaciones abandonadas de QV Logistics.
 
-requisitos: **Rango mínimo: Operative**
-jugadores: **Solo/Grupo**
-recompensas: **Componentes/Objetos Wikelo**
+requisitos: Rango mínimo: Operative
+jugadores: Solo/Grupo
+recompensas: Componentes/Objetos Wikelo
 ---
 > 🌌Sistema Nyx
 > 🪐Localización: Estaciones QV Logistics
