@@ -1,3 +1,4 @@
+imagen: PortadaTSG.jpg
 ---
 titulo: TSG
 estado: activo
@@ -31,3 +32,5 @@ recompensas: BLUEPRINTS
 > Los cazas se encargarán del combate contra los cazas
 > La Perseus se encargará de las naves con más blindaje y naves grades-capitales que saldrán
 > Los que harán el combate FPS serán los de los cazas
+---
+![Descripción](TSG.png)
