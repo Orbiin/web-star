@@ -30,3 +30,8 @@ recompensas: Naves
 ## Consejos
 > Si se consigue llegar a la zona de las tarjetas, esperar ese tiempo de respawn y sacar varias tarjetas
 > Limpiar todas las esquinas por si hay algún campero
+
+![Descripción](Pyamsupvisr.png)
+![Descripción](Chekmate.png)
+![Descripción](Orbituary.png)
+![Descripción](RuinStation.png)
