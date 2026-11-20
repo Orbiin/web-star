@@ -143,6 +143,68 @@ def build(prices, where):
     return {"generated_at": meta["generated_at"], "commodities": items}, meta
 
 
+def first_ok(names):
+    """Prueba varios nombres de endpoint (sin confirmar) y devuelve el primero que responde."""
+    for n in names:
+        try:
+            return n, fetch(n, tries=1)
+        except SystemExit:
+            continue
+    return None, None
+
+
+def wiki_get(path):
+    req = urllib.request.Request("https://api.star-citizen.wiki/api/" + path, headers={
+        "User-Agent": "sc-hub-collector/0.3 (web-star)", "Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.load(r)
+
+
+def trim(v):
+    """Recorta listas largas a 2 elementos para que el diagnostico sea corto."""
+    if isinstance(v, dict):
+        return {k: trim(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [trim(x) for x in v[:2]]
+    return v
+
+
+def wiki_diag():
+    """Diagnostico de la API de la wiki (specs, componentes y posibles precios de UEX por nave)."""
+    res = {}
+    for label, path in (("list", "vehicles"), ("carrack", "vehicles/carrack?include=ports,components")):
+        try:
+            body = wiki_get(path)
+            d = body.get("data", body)
+            item = d[0] if isinstance(d, list) and d else d
+            item = item if isinstance(item, dict) else {}
+            res[label] = {"is_list": isinstance(d, list), "top_keys": sorted(body),
+                          "meta": trim(body.get("meta")), "keys": sorted(item),
+                          "uex_prices": trim(item.get("uex_prices")),
+                          "basic": {k: item.get(k) for k in ("name", "msrp", "size_class", "role", "career")}}
+        except Exception as e:
+            res[label] = {"error": str(e)}
+    return res
+
+
+def ships(where):
+    """Naves: lista, precios de compra y de alquiler. Se guardan los registros SIN transformar
+    (los nombres de campo aun no estan confirmados) y se deja un diagnostico en meta.json."""
+    spec = {"vehicles": ["vehicles"],
+            "purchases": ["vehicles_purchases_prices_all", "vehicles_purchases_prices"],
+            "rentals": ["vehicles_rentals_prices_all", "vehicles_rentals_prices"]}
+    out, diag = {}, {"endpoints": {}, "counts": {}, "samples": {}}
+    for key, names in spec.items():
+        name, data = first_ok(names)
+        out[key] = data if isinstance(data, list) else []
+        diag["endpoints"][key] = name
+        diag["counts"][key] = len(out[key])
+        diag["samples"][key] = out[key][0] if out[key] else None
+    diag["wiki"] = wiki_diag()
+    out["where"] = {str(k): v for k, v in where.items()}
+    return out, diag
+
+
 def main():
     if "--inspect" in sys.argv:
         data = fetch("commodities_prices_all")
@@ -160,6 +222,11 @@ def main():
     except SystemExit:
         meta["game_versions"] = None
     OUT.mkdir(parents=True, exist_ok=True)
+    try:
+        ship_data, meta["ships_diag"] = ships(locate(terminals))
+        (OUT / "ships.json").write_text(json.dumps(ship_data, ensure_ascii=False), encoding="utf-8")
+    except Exception as e:  # las naves nunca deben impedir publicar el comercio
+        meta["ships_diag"] = {"error": str(e)}
     for name, obj in (("commodities.json", data), ("meta.json", meta)):
         tmp = OUT / (name + ".tmp")
         tmp.write_text(json.dumps(obj, ensure_ascii=False), encoding="utf-8")
