@@ -62,6 +62,8 @@ const fmt = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 0});
 const num = v => { const d = String(v).replace(/\D/g, ''); return d ? Number(d) : 0; };
 function load(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
 function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+// Filtro de antigüedad desactivado. Para volver a activarlo: cambia false por true.
+const AGE_FILTER = false;
 let DATA, META, EXTRA = 0, MODE = 'routes';
 const IDS = ['com', 'scu', 'cash', 'sys', 'age', 'sort'];
 const SORTS = {routes: [['total', 'Beneficio total'], ['per', 'Beneficio por SCU'], ['pct', 'Beneficio %']], sell: [['price', 'Precio más alto'], ['total', 'Ingreso total']], buy: [['price', 'Precio más bajo'], ['stock', 'Más stock']]};
@@ -78,13 +80,13 @@ function ageText(h) {
 }
 const dot = h => '<span class="' + (h < 1 ? 'g' : h < 24 ? 'a' : 'r') + '">● ' + ageText(h) + '</span>';
 function where(e) { return esc(e.terminal) + '<div class="m">' + esc([e.place, e.system].filter(Boolean).join(' · ')) + '</div>'; }
-function ok(e) { const sys = $('sys').value; return (!sys || e.system === sys) && ageOf(e) <= Number($('age').value); }
+function ok(e) { const sys = $('sys').value; return (!sys || e.system === sys) && (!AGE_FILTER || ageOf(e) <= Number($('age').value)); }
 function msg(t) { $('out').innerHTML = '<p class="empty">' + t + '</p>'; }
 
 function setMode(m) {
   MODE = m; save('sch_mode', m);
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.m === m));
-  IDS.forEach(k => { $('f-' + k).style.display = SHOW[m].includes(k) ? '' : 'none'; });
+  IDS.forEach(k => { $('f-' + k).style.display = SHOW[m].includes(k) && (k !== 'age' || AGE_FILTER) ? '' : 'none'; });
   $('lab-scu').textContent = SCULAB[m]; $('sub').textContent = SUB[m];
   const cur = load('sch_sort_' + m, SORTS[m][0][0]);
   $('sort').innerHTML = SORTS[m].map(o => '<option value="' + o[0] + '"' + (o[0] === cur ? ' selected' : '') + '>' + o[1] + '</option>').join('');
@@ -108,7 +110,7 @@ function renderRoutes() {
     if (best) routes.push(best);
   }
   routes.sort((x, y) => y[sort] - x[sort]);
-  if (!routes.length) return msg('No hay rutas con estos filtros. Prueba a ampliar la antigüedad de los datos o a cambiar de sistema.');
+  if (!routes.length) return msg('No hay rutas con estos filtros. Prueba a cambiar de sistema o a subir tu capital.');
   $('out').innerHTML = '<table><thead><tr><th>Mercancía</th><th>Comprar en (más barato)</th><th>Stock</th><th>Vender en (más caro)</th><th>Demanda</th><th>SCU a cargar</th><th>Por SCU</th><th>Margen %</th><th>Total</th><th>Dato</th></tr></thead><tbody>' +
     routes.slice(0, 100).map(r => '<tr><td><b>' + esc(r.name) + '</b></td><td>' + where(r.b) + '<div class="n m">' + fmt(r.b.price) + ' /SCU</div></td><td class="n">' + (r.b.scu == null ? '?' : fmt(r.b.scu)) + '</td><td>' + where(r.s) + '<div class="n m">' + fmt(r.s.price) + ' /SCU</div></td><td class="n">' + (r.s.demand == null ? '?' : fmt(r.s.demand)) + '</td><td class="n">' + fmt(r.scu) + '</td><td class="n g">+ ' + fmt(r.per) + '</td><td class="n g">' + r.pct.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' %</td><td class="n g"><b>' + fmt(r.total) + '</b></td><td>' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
 }
@@ -126,7 +128,7 @@ function renderList() {
     return {e, lim, n, total: e.price * n, age: ageOf(e)};
   });
   rows.sort((x, y) => sort === 'total' ? y.total - x.total : sort === 'stock' ? (y.lim || 0) - (x.lim || 0) : sell ? y.e.price - x.e.price : x.e.price - y.e.price);
-  if (!rows.length) return msg('No hay datos de ' + esc(c.name) + ' con estos filtros. Prueba a ampliar la antigüedad o a cambiar de sistema.');
+  if (!rows.length) return msg('No hay datos de ' + esc(c.name) + ' con estos filtros. Prueba a cambiar de sistema.');
   $('out').innerHTML = '<table><thead><tr><th>Terminal</th><th>Precio /SCU</th><th>' + (sell ? 'Demanda' : 'Stock') + '</th><th>' + (sell ? 'Puedes vender' : 'Puedes comprar') + '</th><th>' + (sell ? 'Ingreso' : 'Coste') + '</th><th>Dato</th></tr></thead><tbody>' +
     rows.slice(0, 60).map(r => '<tr><td>' + where(r.e) + '</td><td class="n ' + (sell ? 'g' : '') + '"><b>' + fmt(r.e.price) + '</b></td><td class="n">' + (r.lim == null ? '?' : fmt(r.lim)) + '</td><td class="n">' + fmt(r.n) + (qty && r.n < qty ? '<div class="note">solo ' + fmt(r.n) + ' de ' + fmt(qty) + '</div>' : '') + '</td><td class="n">' + (r.n ? fmt(r.total) : '—') + '</td><td>' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
 }
