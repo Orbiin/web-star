@@ -6,6 +6,7 @@ objetivo: Minar material que solo se encuentra en esa piedra
 requisitos: Junior o Contrator con Shubin
 jugadores: Solo/Grupo
 recompensas: Minenal Sadaryx
+imagen:QVPortada.png
 ---
 > 🌌Sistema Nyx
 > 🪐Localización: Estaciones QV
@@ -38,3 +39,10 @@ recompensas: Minenal Sadaryx
 > La piedra tiene un tiempo antes de volver a cerrarse
 > La misión exclusiva se necesita ser Contractor para que aparezca
 > Hay misiones que se pueden hacer en conjunto para desbloquear BP
+
+![Descripción](QV1.png)
+![Descripción](QV2.png)
+![Descripción](QV3.png)
+![Descripción](QV4.png)
+![Descripción](QV5.png)
+![Descripción](QV6.png)
