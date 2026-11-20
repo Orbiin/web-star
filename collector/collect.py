@@ -243,11 +243,13 @@ def ships(where):
 def guides():
     """Lee web/guias/*.md (cabecera 'clave: valor' entre ---). Los que empiezan por _ se ignoran."""
     d = Path("web/guias")
-    out = []
-    for f in sorted(d.glob("*.md")) if d.is_dir() else []:
-        if f.name.startswith("_"):
+    out, skipped, no_header = [], [], []
+    for f in sorted(d.iterdir()) if d.is_dir() else []:
+        if f.suffix.lower() != ".md" or f.name.startswith("_"):
+            skipped.append(f.name)
             continue
-        text, meta, body = f.read_text(encoding="utf-8"), {}, ""
+        # utf-8-sig quita la marca BOM que algunos editores añaden y que rompe la cabecera
+        text, meta, body = f.read_text(encoding="utf-8-sig", errors="replace"), {}, ""
         parts = text.split("---", 2) if text.lstrip().startswith("---") else None
         if parts and len(parts) == 3:
             for line in parts[1].splitlines():
@@ -257,13 +259,14 @@ def guides():
             body = parts[2].strip()
         else:
             body = text.strip()
+            no_header.append(f.name)
         out.append({"slug": f.stem, "title": meta.get("titulo", f.stem),
                     "status": meta.get("estado", "inactivo").lower(), "patch": meta.get("parche", ""),
                     "summary": meta.get("resumen", ""), "requirements": meta.get("requisitos", ""),
                     "players": meta.get("jugadores", ""), "rewards": meta.get("recompensas", ""),
                     "image": meta.get("imagen", ""), "body": body})
     out.sort(key=lambda g: (g["status"] != "activo", g["title"].lower()))
-    return out
+    return out, {"found": len(out), "skipped_files": skipped, "without_header": no_header}
 
 
 def main():
@@ -284,7 +287,8 @@ def main():
         meta["game_versions"] = None
     OUT.mkdir(parents=True, exist_ok=True)
     try:
-        (OUT / "guides.json").write_text(json.dumps(guides(), ensure_ascii=False), encoding="utf-8")
+        found, meta["guides_diag"] = guides()
+        (OUT / "guides.json").write_text(json.dumps(found, ensure_ascii=False), encoding="utf-8")
     except Exception as e:
         print("Guias no generadas:", e, file=sys.stderr)
     try:
