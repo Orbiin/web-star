@@ -7,6 +7,7 @@ objetivo: Despliegue de flota en Pyro IV para coger una tarjeta y enfrentarse al
 requisitos: Rango mínimo: Ninguno
 jugadores: Mínimo 3 jugadores
 recompensas: Dientes y perlas del VALAKKAR IRRADIADO
+imagen: LazarusPortada.png
 ---
 > 🌌Sistema Pyro
 > 🪐Planeta: Pyro IV
