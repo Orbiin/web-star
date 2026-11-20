@@ -10,7 +10,7 @@ recompensas: Dientes y perlas del VALAKKAR IRRADIADO
 ---
 > 🌌Sistema Pyro
 > 🪐Planeta: Pyro IV
----
+
 ## Antes de empezar
 - Armadura y armamento pesado.
 - Munición suficiente para un enfrentamiento prolongado. (Preferible LMG balisticas)
