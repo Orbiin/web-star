@@ -9,7 +9,7 @@ jugadores: Mínimo 5
 recompensas: BLUEPRINTS
 ---
 > 🌌 Sistema Nyx
----
+
 ## Naves y equipamiento mínimos
 - 1 PERSEUS
 - 3/4 CAZAS
