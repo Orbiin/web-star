@@ -225,6 +225,43 @@ def normalize_ships(raw, where, now):
     return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "ships": out}
 
 
+def shape(v, depth=3):
+    """Resume la ESTRUCTURA de un JSON (claves y primeros elementos) para poder inspeccionarlo."""
+    def sub(x):  # al agotar la profundidad solo se oculta lo anidado, los valores simples se ven
+        return shape(x, depth - 1) if depth > 0 or not isinstance(x, (dict, list)) else "..."
+    if isinstance(v, dict):
+        return {k: sub(x) for k, x in list(v.items())[:40]}
+    if isinstance(v, list):
+        return [sub(x) for x in v[:2]] + (["(+%d mas)" % (len(v) - 2)] if len(v) > 2 else [])
+    return v[:60] if isinstance(v, str) else v
+
+
+def wiki_sample(uex_uuids):
+    """TEMPORAL: comprueba si los uuid de UEX y de la wiki coinciden y enseña la estructura
+    de una nave con puertos/componentes. Se quitara cuando la ventana de Naves este terminada."""
+    res = {}
+    try:
+        uuids, first, page, last, pages = set(), None, 1, 1, 0
+        while page <= min(last, 20):
+            body = wiki_get("vehicles?page%5Bnumber%5D=" + str(page))
+            data = body.get("data", [])
+            first = first or (data[0] if data else None)
+            uuids.update(d.get("uuid") for d in data)
+            last = (body.get("meta") or {}).get("last_page", 1)
+            page, pages = page + 1, pages + 1
+            time.sleep(0.5)
+        res["match"] = {"wiki": len(uuids), "uex": len(uex_uuids), "uuid_overlap": len(uuids & uex_uuids), "pages": pages}
+        res["list_item"] = shape(first, 3)
+    except Exception as e:
+        res["match"] = {"error": str(e)}
+    try:
+        body = wiki_get("vehicles/gladius?include=ports,components")
+        res["gladius"] = shape(body.get("data", body), 4)
+    except Exception as e:
+        res["gladius"] = {"error": str(e)}
+    return res
+
+
 def ships(where):
     """Naves: lista, precios de compra y de alquiler. Se guardan los registros SIN transformar
     (los nombres de campo aun no estan confirmados) y se deja un diagnostico en meta.json."""
@@ -237,6 +274,7 @@ def ships(where):
         out[key] = data if isinstance(data, list) else []
         diag["endpoints"][key] = name
         diag["counts"][key] = len(out[key])
+    diag["wiki"] = wiki_sample({v.get("uuid") for v in out["vehicles"] if v.get("uuid")})
     return out, diag
 
 
@@ -269,40 +307,81 @@ def guides():
     return out, {"found": len(out), "skipped_files": skipped, "without_header": no_header}
 
 
+PREV = os.environ.get("PREV_BASE", "").rstrip("/")       # donde esta publicada la web (datos de la vez anterior)
+FORCE = os.environ.get("FORCE_STATIC", "").lower() in ("1", "true", "yes")
+REFRESH_EVERY_H = 6      # tras un parche nuevo, se vuelven a pedir los datos fijos cada 6 h...
+REFRESH_WINDOW_D = 3     # ...durante 3 dias, porque UEX tarda en actualizar los suyos
+
+
+def prev_json(name):
+    """Descarga un archivo de la web ya publicada (None si no existe todavia)."""
+    if not PREV:
+        return None
+    try:
+        req = urllib.request.Request(f"{PREV}/{name}?t={int(time.time())}",
+                                     headers={"User-Agent": "sc-hub-collector/0.4"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return json.load(r)
+    except Exception:
+        return None
+
+
+def static_data(live, now, where):
+    """Naves y sus precios: solo cambian con un parche, asi que solo se piden a UEX cuando toca.
+    Devuelve (ships_json, state, razon). Si no toca refrescar, reutiliza lo ya publicado."""
+    state, old_ships = prev_json("static.json"), prev_json("ships.json")
+    changed = bool(live) and (not state or state.get("version") != live)
+    first_seen = now if (changed or not state) else state.get("first_seen", now)
+    last = (state or {}).get("fetched_at", 0)
+    window = now - first_seen < REFRESH_WINDOW_D * 86400 and now - last > REFRESH_EVERY_H * 3600
+    reason = ("forzado a mano" if FORCE else "sin datos previos" if not (state and old_ships) else
+              "parche nuevo" if changed else "refresco tras parche" if window else None)
+    if reason:
+        try:
+            raw, diag = ships(where)
+            ship_data = normalize_ships(raw, where, now)
+            return ship_data, {"version": live, "first_seen": first_seen, "fetched_at": now, "diag": diag}, reason
+        except (SystemExit, Exception) as e:
+            print("No se pudieron refrescar las naves:", e, file=sys.stderr)
+            if not (state and old_ships):
+                return {"generated_at": None, "ships": []}, {"version": live}, "error"
+    return old_ships, state, None
+
+
 def main():
     if "--inspect" in sys.argv:
         data = fetch("commodities_prices_all")
         print(f"{len(data)} registros. Primer registro:")
         print(json.dumps(data[0], indent=2, ensure_ascii=False))
         return
-    prices = fetch("commodities_prices_all")
+    now = time.time()
     try:
-        terminals = fetch("terminals", tries=2)
+        gv = fetch("game_versions", tries=1)
     except SystemExit:
-        terminals = []
-    data, meta = build(prices, locate(terminals))
-    try:
-        meta["game_versions"] = fetch("game_versions", tries=1)
+        gv = None
+    live = gv.get("live") if isinstance(gv, dict) else None
+    try:                                                       # terminales: se piden siempre, como el comercio
+        where = locate(fetch("terminals", tries=2))
     except SystemExit:
-        meta["game_versions"] = None
+        where = {}
+    ship_data, state, reason = static_data(live, now, where)  # naves: solo con parche nuevo
+    data, meta = build(fetch("commodities_prices_all"), where)  # precios: SIEMPRE
+    meta["game_versions"] = gv
+    meta["static_diag"] = {"version": live, "ships_refreshed": reason, "fetched_at": iso(state.get("fetched_at")),
+                           "first_seen": iso(state.get("first_seen"))}
+    if state.get("diag"):
+        meta["ships_diag"] = state["diag"]      # se conserva entre ejecuciones (esta en static.json)
     OUT.mkdir(parents=True, exist_ok=True)
     try:
         found, meta["guides_diag"] = guides()
         (OUT / "guides.json").write_text(json.dumps(found, ensure_ascii=False), encoding="utf-8")
     except Exception as e:
         print("Guias no generadas:", e, file=sys.stderr)
-    try:
-        where = locate(terminals)
-        raw, meta["ships_diag"] = ships(where)
-        ship_data = normalize_ships(raw, where, time.time())
-        (OUT / "ships.json").write_text(json.dumps(ship_data, ensure_ascii=False), encoding="utf-8")
-    except Exception as e:  # las naves nunca deben impedir publicar el comercio
-        meta["ships_diag"] = {"error": str(e)}
-    for name, obj in (("commodities.json", data), ("meta.json", meta)):
+    for name, obj in (("commodities.json", data), ("meta.json", meta), ("ships.json", ship_data), ("static.json", state)):
         tmp = OUT / (name + ".tmp")
         tmp.write_text(json.dumps(obj, ensure_ascii=False), encoding="utf-8")
         tmp.replace(OUT / name)
-    print(f"OK: {meta['commodities']} mercancias, {meta['price_records']} precios.")
+    print(f"OK: {meta['commodities']} mercancias, {meta['price_records']} precios. Naves: {reason or 'reutilizadas'}.")
 
 
 if __name__ == "__main__":
