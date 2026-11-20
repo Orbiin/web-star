@@ -6,6 +6,7 @@ objetivo: Infiltrarse en las instalaciones abandonadas de ASD Onyx e investigar 
 requisitos: Completar todas las misiones
 jugadores: Solo/Grupo
 recompensas: Armaduras/Objetos Wikelo
+imagen: OnyxPortada.jpg
 ---
 > 🌌Sistema Stanton
 > 🪐Localización: ASD Onyx Facility
@@ -76,3 +77,9 @@ Acabar con el tio Sam
 ## Consejos
 > Cubrirse bien de la radiación en el núcleo de energía
 > Cada catalizador está vinculado a un objeto de wikello
+
+![Descripción](Onyx1.png)
+![Descripción](Onyx2.png)
+![Descripción](Onyx3.png)
+![Descripción](Onyx4.png)
+![Descripción](Onyx5.png)
