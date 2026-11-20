@@ -22,7 +22,7 @@ recompensas: Dientes y perlas del VALAKKAR IRRADIADO
 2. Ir a un puesto Lazarus para ir a por el huevo
 3. Se necesita la armadura Amarilla que se consigue en la parte de investigación del complejo. Esta necesita una clave, esta clave se consigue con los bloques que están en rojo en la tabla numérica.
 4. Abrir la puerta del huevo con el traje puesto y la persona que tiene la tarjeta tiene que interactuar con la pantalla e introducir la tarjeta.
-5. [Al iniciar la secuencia se abrirán todas las puertas de la habitación y procederá a la secuencia de abrir el cristal del huevo, cuando este paso se realice, vendrán oleadas de enemigos los cuales hay que acabar con ellos.
+5. Al iniciar la secuencia se abrirán todas las puertas de la habitación y procederá a la secuencia de abrir el cristal del huevo, cuando este paso se realice, vendrán oleadas de enemigos los cuales hay que acabar con ellos.
 6. Hay que darle a la pantalla del huevo cada 30% para avanzar, cada vez que le demos vendrá una oleada de enemigos y así hasta terminar la secuencia.
 7. Al coger el huevo también vendrá una oleada
 8. Una vez el realizado esos pasos habrá que ir a la ultima antena y colocar el huevo. Cuando se recoja el huevo aparecerán Valakkars juveniles y medianos, los cuales habrá que matarlos para que la pelea con el Valakkar Iradiado sea más fácil.
