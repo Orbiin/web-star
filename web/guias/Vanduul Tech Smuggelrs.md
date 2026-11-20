@@ -1,12 +1,13 @@
 ---
 titulo: VANDUUL TECH SMUGGELS
 estado: activo
-parche: [5.0.0]
+parche: 5.0.0
 objetivo: Seguir el rastro de una operación de contrabando relacionada con tecnología Vanduul y descubrir qué ocurrió en las instalaciones abandonadas de QV Logistics.
-
 requisitos: Rango mínimo: Operative
 jugadores: Solo/Grupo
 recompensas: Componentes/Objetos Wikelo
+imagen: VanduulTechPortada.jpg
+
 ---
 > 🌌Sistema Nyx
 > 🪐Localización: Estaciones QV Logistics
@@ -37,3 +38,5 @@ recompensas: Componentes/Objetos Wikelo
 ## Consejos
 > Si no funcionan los ascensores de carga, bajar los componentes por el ascensor normal
 > Rellenar más de una tarjeta negra y amarilla
+
+![Descripción](VandulTech.png)
