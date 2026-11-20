@@ -2,7 +2,7 @@ name: Actualizar datos y publicar
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/15 * * * *"   # cada 15 min (GitHub puede retrasarlo unos minutos)
   push:
     branches: [main]
   workflow_dispatch:
@@ -23,19 +23,19 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - name: Recoger datos
+      - name: Recoger datos (si falla, no se publica y se queda la version anterior)
         run: python collector/collect.py
         env:
           UEX_TOKEN: ${{ secrets.UEX_TOKEN }}
       - name: Copiar la web si existe
         run: if [ -d web ]; then cp -r web/. site/; fi
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
