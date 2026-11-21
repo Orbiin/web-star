@@ -58,6 +58,11 @@ a.nl:hover{border-color:var(--cy)}
 h2{margin:0;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);font-family:'JetBrains Mono',monospace}
 .sec{padding:16px 18px;border-bottom:1px solid var(--line)}
 .stack{display:flex;flex-direction:column;gap:18px}
+.cols{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.cols>section{flex:1 1 340px;min-width:0}
+.kvr{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #16303d;font-size:14px}
+.body{padding:6px 18px 14px}
+.grp td:first-child{color:var(--cy);font-weight:600}
 </style>
 </head>
 <body>
@@ -73,7 +78,7 @@ h2{margin:0;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:v
 <div id="f-sort"><label for="sort">Ordenar por</label><select id="sort"><option value="name">Nombre</option><option value="buy">Compra más barata</option><option value="rent">Alquiler más barato</option><option value="scu">Más SCU</option></select></div>
 </div>
 <div id="out"><p class="empty">Cargando datos…</p></div>
-<footer>Web privada y no oficial de la comunidad. Star Citizen es una marca de Cloud Imperium Rights LLC. Los precios provienen de <a href="https://uexcorp.space" target="_blank" rel="noopener">UEX Corp</a> y los aportan los jugadores. El periodo del precio de alquiler no está confirmado en los datos.</footer>
+<footer>Web privada y no oficial de la comunidad. Star Citizen es una marca de Cloud Imperium Rights LLC. Los precios provienen de <a href="https://uexcorp.space" target="_blank" rel="noopener">UEX Corp</a> y los aportan los jugadores. Estadísticas y componentes: <a href="https://api.star-citizen.wiki" target="_blank" rel="noopener">Star Citizen Wiki API</a>. El periodo del precio de alquiler no está confirmado en los datos.</footer>
 </div>
 <script>
 // true = muestra la foto de UEX en la ficha (enlazada desde su servidor). Revisa antes los derechos de las imágenes.
@@ -109,6 +114,51 @@ function table(list, what) {
     rows.map(e => '<tr><td><b>' + esc(e.terminal) + '</b></td><td>' + esc([e.place, e.system].filter(Boolean).join(' · ')) + '</td><td class="n g"><b>' + fmt(e.price) + '</b></td><td>' + dot(ageOf(e)) + '</td></tr>').join('') + '</tbody></table></div>';
 }
 
+let SD = null, STATS_TOKEN = 0;
+async function loadSD() {
+  if (SD) return SD;
+  const r = await fetch('data/shipdata.json', {cache: 'no-store'});
+  if (!r.ok) throw new Error('HTTP');
+  return (SD = await r.json());
+}
+const n1 = v => v == null ? '—' : Number(v).toLocaleString('es-ES', {maximumFractionDigits: 1});
+const pc = v => v == null ? '—' : Math.round(v * 100) + ' %';
+const rng = (o, f) => !o ? '—' : (o.minimum === o.maximum ? f(o.maximum) : f(o.minimum) + ' – ' + f(o.maximum));
+const kv = (k, v) => '<div class="kvr"><span class="m">' + k + '</span><span class="n">' + v + '</span></div>';
+const tl = (label, val) => '<div class="tile"><b>' + val + '</b><span>' + label + '</span></div>';
+const TYPES = [['WeaponGun', 'Armas'], ['Turret', 'Torretas'], ['TurretBase', 'Bases de torreta'], ['MissileLauncher', 'Lanzamisiles'], ['Missile', 'Misiles'], ['WeaponDefensive', 'Contramedidas'], ['Shield', 'Escudos'], ['PowerPlant', 'Generadores'], ['Cooler', 'Refrigeradores'], ['QuantumDrive', 'Motor cuántico'], ['Radar', 'Radar'], ['MainThruster', 'Propulsor principal'], ['ManneuverThruster', 'Propulsores de maniobra'], ['FuelTank', 'Combustible'], ['QuantumFuelTank', 'Combustible cuántico'], ['EMP', 'EMP'], ['QuantumInterdictionGenerator', 'Interdicción'], ['TractorBeam', 'Rayo tractor'], ['SalvageHead', 'Salvamento']];
+function groupW(list) { const m = new Map(); (list || []).forEach(w => { const e = m.get(w.name) || {w, n: 0}; e.n++; m.set(w.name, e); }); return [...m.values()]; }
+
+function statsHtml(d) {
+  const w = d.weapons || {}, sh = d.shield || {}, sp = d.speed || {}, ag = d.agility || {}, q = d.quantum || {}, ins = d.insurance || {}, ar = d.armor || {}, dm = ar.damage || {}, sn = w.snapshot || {};
+  const guns = groupW(w.fixed).map(e => kv((e.n > 1 ? e.n + '× ' : '') + esc(e.w.name), n1(e.w.dps) + ' DPS')).join('');
+  const misl = w.missiles && w.missiles.count ? kv('Misiles', n1(w.missiles.count) + ' · daño total ' + fmt((w.missiles.damage || {}).total || 0)) : '';
+  const cms = sn.countermeasures_count ? kv('Contramedidas', sn.countermeasures_count) : '';
+  const res = [['physical', 'Físico'], ['energy', 'Energía'], ['distortion', 'Distorsión']].map(r => '<tr><td>' + r[1] + '</td><td class="n">' + rng((sh.resist || {})[r[0]], pc) + '</td><td class="n">' + rng((sh.absorb || {})[r[0]], pc) + '</td><td class="n">' + (dm[r[0]] == null ? '—' : '×' + Number(dm[r[0]]).toLocaleString('es-ES', {maximumFractionDigits: 2})) + '</td></tr>').join('');
+  const order = TYPES.map(x => x[0]);
+  const ports = (d.ports || []).slice().sort((a, b) => (order.indexOf(a.type) + 100) % 100 - (order.indexOf(b.type) + 100) % 100 || String(a.name).localeCompare(String(b.name)));
+  let last = null;
+  const comp = ports.map(p => { const lab = (TYPES.find(x => x[0] === p.type) || [0, p.label || p.type])[1]; const first = lab !== last; last = lab;
+    return '<tr' + (first ? ' class="grp"' : '') + '><td>' + (first ? esc(lab) : '') + '</td><td><b>' + esc(p.name) + '</b></td><td class="n">' + (p.size == null ? '—' : 'S' + p.size) + '</td><td class="n">' + esc(p.grade == null ? '—' : p.grade) + '</td><td class="n">' + p.n + '</td><td class="m">' + esc(p.maker || '') + '</td></tr>'; }).join('');
+  return '<div class="stack"><div class="cols">' +
+    '<section class="card"><div class="sec"><h2>Combate</h2></div><div class="body"><div class="tiles">' + tl('DPS', n1(w.dps)) + tl('DPS sostenido', n1(w.sustained)) + tl('Alfa', n1(w.alpha)) + '</div>' + guns + misl + cms + '</div></section>' +
+    '<section class="card"><div class="sec"><h2>Defensa</h2></div><div class="body"><div class="tiles">' + tl('Casco HP', fmt(d.health || 0)) + tl('Escudo HP', fmt(sh.hp || 0)) + tl('Regen. /s', n1(sh.regen)) + tl('Cara', esc(sh.face || '—')) + '</div>' + kv('Blindaje HP', fmt(ar.health || 0)) +
+    '<div class="scroll"><table style="min-width:420px"><thead><tr><th>Daño</th><th>Resistencia</th><th>Absorción</th><th>Blindaje</th></tr></thead><tbody>' + res + '</tbody></table></div></div></section></div>' +
+    '<div class="cols"><section class="card"><div class="sec"><h2>Movimiento</h2></div><div class="body"><div class="tiles">' + tl('SCM m/s', n1(sp.scm)) + tl('Máx. m/s', n1(sp.max)) + tl('0 → SCM (s)', n1(sp.zero_to_scm)) + '</div><div class="tiles">' + tl('Cabeceo °/s', n1(ag.pitch)) + tl('Guiñada °/s', n1(ag.yaw)) + tl('Alabeo °/s', n1(ag.roll)) + '</div></div></section>' +
+    '<section class="card"><div class="sec"><h2>Otros datos</h2></div><div class="body">' + kv('PVP en tienda', d.msrp == null ? '—' : n1(d.msrp) + ' USD') + kv('Combustible (capacidad)', n1(d.fuel)) + kv('Cuántico: velocidad', q.quantum_speed ? n1(q.quantum_speed / 1e6) + ' Mm/s' : '—') + kv('Cuántico: alcance', q.quantum_range ? n1(q.quantum_range / 1e9) + ' Gm' : '—') + kv('Cuántico: carga', q.quantum_spool_time == null ? '—' : n1(q.quantum_spool_time) + ' s') + kv('Firma IR / EM', n1((d.signature || {}).ir_shields) + ' / ' + n1((d.signature || {}).em_shields)) + kv('Seguro: reclamación', ins.claim_time == null ? '—' : n1(ins.claim_time) + ' min') + kv('Seguro: acelerar', ins.expedite_cost == null ? '—' : fmt(ins.expedite_cost) + ' aUEC · ' + n1(ins.expedite_time) + ' min') + '</div></section></div>' +
+    '<section class="card"><div class="sec"><h2>Componentes</h2></div>' + (comp ? '<div class="scroll"><table style="min-width:640px"><thead><tr><th>Tipo</th><th>Componente</th><th>Tamaño</th><th>Grado</th><th>Cant.</th><th>Fabricante</th></tr></thead><tbody>' + comp + '</tbody></table></div>' : '<p class="empty">La wiki no lista componentes para esta nave.</p>') + '<p class="m" style="padding:0 18px 14px;margin:0">Cambiar componentes y recalcular las estadísticas: próximamente.</p></section></div>';
+}
+
+async function fillStats(s) {
+  const token = ++STATS_TOKEN;
+  const put = h => { if (token === STATS_TOKEN && $('stats')) $('stats').innerHTML = h; };
+  try {
+    const sd = await loadSD();
+    const d = s.wid && sd.ships[s.wid];
+    put(d ? statsHtml(d) : '<p class="empty">No hay estadísticas detalladas de esta nave en la wiki.</p>');
+  } catch (e) { put('<p class="empty">No se pudieron cargar las estadísticas.</p>'); }
+}
+
 function renderDetail(s) {
   const dims = (s.size || []).filter(x => x > 0);
   const art = '<svg viewBox="0 0 360 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><radialGradient id="a" cx="60%" cy="50%" r="60%"><stop offset="0" stop-color="#3fd6e8" stop-opacity=".4"/><stop offset="1" stop-color="#3fd6e8" stop-opacity="0"/></radialGradient></defs><rect width="360" height="170" fill="#08121b"/><rect width="360" height="170" fill="url(#a)"/><g transform="translate(70 40)"><ellipse cx="-4" cy="55" rx="34" ry="7" fill="#3fd6e8" opacity=".7"/><polygon points="0,55 90,40 175,47 215,55 175,63 90,70" fill="#aebfcb"/><polygon points="90,40 66,12 122,36" fill="#7e93a3"/><polygon points="90,70 66,98 122,74" fill="#6a7f8f"/></g></svg>';
@@ -120,7 +170,8 @@ function renderDetail(s) {
     '<div class="tiles">' + tile('SCU', s.scu == null ? '—' : fmt(s.scu)) + tile('Tripulación', s.crew || '—') + tile('Masa (kg)', s.mass ? fmt(s.mass) : '—') + tile('Dimensiones (m)', dims.length ? dims.join(' × ') : '—') + tile('Plataforma', s.pad || '—') + '</div>' +
     (s.store ? '<p style="margin:14px 0 0"><a href="' + esc(s.store) + '" target="_blank" rel="noopener">Ficha en la tienda de RSI ↗</a></p>' : '') + '</div></section>' +
     '<section class="card"><div class="sec"><h2>Dónde comprarla</h2></div>' + table(s.buy, 'No hay datos de compra por aUEC en este filtro. Puede que solo se venda con dinero real.') + '</section>' +
-    '<section class="card"><div class="sec"><h2>Dónde alquilarla</h2></div>' + table(s.rent, 'No hay datos de alquiler en este filtro.') + '</section></div>';
+    '<section class="card"><div class="sec"><h2>Dónde alquilarla</h2></div>' + table(s.rent, 'No hay datos de alquiler en este filtro.') + '</section><div id="stats"><p class="empty">Cargando estadísticas…</p></div></div>';
+  fillStats(s);
   $('back').addEventListener('click', () => { $('q').value = ''; render(); window.scrollTo(0, 0); });
 }
 
