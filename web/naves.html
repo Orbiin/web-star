@@ -63,6 +63,10 @@ h2{margin:0;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:v
 .kvr{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #16303d;font-size:14px}
 .body{padding:6px 18px 14px}
 .grp td:first-child{color:var(--cy);font-weight:600}
+.dl{font-size:12px;margin-left:8px;font-family:'JetBrains Mono',monospace}
+.dl.up{color:var(--gr)}.dl.dn{color:var(--rd)}
+select.cs{height:40px;font-size:13px;max-width:360px;width:100%}
+.warn{font-size:13px;color:var(--am);margin:8px 0 0}
 </style>
 </head>
 <body>
@@ -115,11 +119,113 @@ function table(list, what) {
 }
 
 let SD = null, STATS_TOKEN = 0;
+let IT = null, ITBYID = {}, SEL = {};
 async function loadSD() {
-  if (SD) return SD;
-  const r = await fetch('data/shipdata.json', {cache: 'no-store'});
-  if (!r.ok) throw new Error('HTTP');
-  return (SD = await r.json());
+  if (SD && IT) return SD;
+  const [a, b] = await Promise.all([fetch('data/shipdata.json', {cache: 'no-store'}), fetch('data/items.json', {cache: 'no-store'})]);
+  if (!a.ok) throw new Error('HTTP');
+  SD = await a.json();
+  IT = b.ok ? await b.json() : {types: {}};
+  ITBYID = {};
+  Object.values(IT.types || {}).forEach(l => l.forEach(x => { ITBYID[x.uuid] = x; }));
+  return SD;
+}
+
+// ---------- Configurador de componentes ----------
+const SLOT_LABEL = {WeaponGun: 'Arma', Shield: 'Escudo', PowerPlant: 'Generador', Cooler: 'Refrigerador', QuantumDrive: 'Motor cuántico'};
+const METRIC = {WeaponGun: 'dps', Shield: 'hp', PowerPlant: 'seg', Cooler: 'seg', QuantumDrive: 'speed'};
+function shortStat(t, x) {
+  const v = x[METRIC[t]];
+  if (v == null) return '—';
+  return t === 'WeaponGun' ? n1(v) + ' DPS' : t === 'Shield' ? fmt(v) + ' HP' : t === 'QuantumDrive' ? n1(v / 1e6) + ' Mm/s' : n1(v) + ' seg.';
+}
+function statLine(t, it) {
+  if (!it) return '—';
+  if (t === 'WeaponGun') return n1(it.dps) + ' DPS' + (it.rpm ? ' · ' + fmt(it.rpm) + ' rpm' : '') + (it.range ? ' · ' + fmt(it.range) + ' m' : '');
+  if (t === 'Shield') return fmt(it.hp || 0) + ' HP · ' + n1(it.regen) + '/s';
+  if (t === 'QuantumDrive') return (it.speed ? n1(it.speed / 1e6) + ' Mm/s' : '—') + ' · carga ' + n1(it.spool) + ' s';
+  return n1(it.seg) + ' segmentos';
+}
+function pool(s) {
+  const lo = s.min == null ? s.cur.size : s.min, hi = s.max == null ? s.cur.size : s.max, m = METRIC[s.type];
+  const list = ((IT.types || {})[s.type] || []).filter(x => x.size != null && x.size >= lo && x.size <= hi);
+  list.sort((a, b) => (b[m] || 0) - (a[m] || 0) || String(a.name).localeCompare(String(b.name)));
+  if (!list.some(x => x.uuid === s.cur.uuid)) list.unshift(s.cur);
+  return list;
+}
+function rowNote(s, uuid) {
+  if (!uuid || uuid === s.cur.uuid) return 'de serie';
+  const it = ITBYID[uuid], p = it && it.price;
+  return p ? 'desde ' + fmt(p.price) + ' aUEC · ' + esc(p.terminal || '') + (p.place ? ' (' + esc(p.place) + (p.system ? ', ' + esc(p.system) : '') + ')' : '') : 'sin precio en tiendas';
+}
+function calc(d, sel) {
+  const w = d.weapons || {}, sh = d.shield || {}, q = d.quantum || {};
+  const r = {dps: w.dps || 0, sus: w.sustained || 0, alpha: w.alpha || 0, hp: sh.hp || 0, regen: sh.regen || 0, pgen: d.power_gen, cgen: d.cool_gen,
+    qspeed: q.quantum_speed, qspool: q.quantum_spool_time, qrange: q.quantum_range, cost: 0, changed: 0, unpriced: 0, partial: false, turret: false};
+  (d.slots || []).forEach((s, i) => {
+    const uuid = sel[i];
+    if (!uuid || uuid === s.cur.uuid || !ITBYID[uuid]) return;
+    const nw = ITBYID[uuid], old = ITBYID[s.cur.uuid] || s.cur;
+    r.changed++;
+    if (nw.price) r.cost += nw.price.price; else r.unpriced++;
+    const dl = k => { if (nw[k] == null || old[k] == null) { r.partial = true; return 0; } return nw[k] - old[k]; };
+    if (s.type === 'WeaponGun') { if (s.turret) r.turret = true; else { r.dps += dl('dps'); r.sus += dl('sustained'); r.alpha += dl('alpha'); } }
+    else if (s.type === 'Shield') { r.hp += dl('hp'); r.regen += dl('regen'); }
+    else if (s.type === 'PowerPlant') r.pgen = (r.pgen || 0) + dl('seg');
+    else if (s.type === 'Cooler') r.cgen = (r.cgen || 0) + dl('seg');
+    else if (s.type === 'QuantumDrive') {
+      if (nw.speed == null || nw.spool == null) r.partial = true;
+      else { r.qspeed = nw.speed; r.qspool = nw.spool; if (nw.fuel_rate && q.quantum_fuel_capacity) r.qrange = q.quantum_fuel_capacity / nw.fuel_rate; }
+    }
+  });
+  return r;
+}
+function tile2(label, now, base, f, lower) {
+  const diff = now == null || base == null ? 0 : now - base, good = lower ? diff < 0 : diff > 0;
+  const arrow = Math.abs(diff) < 1e-9 ? '' : '<span class="dl ' + (good ? 'up' : 'dn') + '">' + (diff > 0 ? '▲ ' : '▼ ') + f(Math.abs(diff)) + '</span>';
+  return '<div class="tile"><b>' + (now == null ? '—' : f(now)) + arrow + '</b><span>' + label + '</span></div>';
+}
+function sumHtml(d) {
+  const r = calc(d, SEL), b = calc(d, {});
+  const mm = v => n1(v / 1e6), gm = v => n1(v / 1e9);
+  return '<div class="tiles">' + tile2('DPS piloto', r.dps, b.dps, n1) + tile2('DPS sostenido', r.sus, b.sus, n1) + tile2('Alfa', r.alpha, b.alpha, n1) +
+    tile2('Escudo HP', r.hp, b.hp, fmt) + tile2('Regen. /s', r.regen, b.regen, n1) + '</div><div class="tiles">' +
+    tile2('Energía (seg.)', r.pgen, b.pgen, n1) + tile2('Refriger. (seg.)', r.cgen, b.cgen, n1) + tile2('Cuántico Mm/s', r.qspeed, b.qspeed, mm) +
+    tile2('Carga cuántica s', r.qspool, b.qspool, n1, true) + tile2('Alcance Gm', r.qrange, b.qrange, gm) + '</div>' +
+    '<p style="margin:12px 0 0">' + (r.changed ? '<b>' + r.changed + '</b> cambio' + (r.changed > 1 ? 's' : '') + ' · coste de las piezas: <b class="n">' + fmt(r.cost) + ' aUEC</b>' + (r.unpriced ? ' <span class="m">(+ ' + r.unpriced + ' sin precio en tiendas)</span>' : '') : '<span class="m">Sin cambios: valores de serie.</span>') + '</p>' +
+    (r.turret ? '<p class="warn">Las armas de torretas no se suman al DPS del piloto.</p>' : '') +
+    (r.partial ? '<p class="warn">Alguna pieza no tiene todos los datos: el cálculo puede ser aproximado.</p>' : '');
+}
+function cfgHtml(d) {
+  if (!(d.slots || []).length || !IT || !Object.keys(IT.types || {}).length) return '<section class="card"><div class="sec"><h2>Configurador de componentes</h2></div><p class="empty">No está disponible para esta nave.</p></section>';
+  const count = {};
+  const rows = d.slots.map((s, i) => {
+    count[s.type] = (count[s.type] || 0) + 1;
+    const size = s.min == null ? '' : s.min === s.max ? 'S' + s.min : 'S' + s.min + '–S' + s.max;
+    const opts = pool(s).map(x => '<option value="' + esc(x.uuid) + '"' + (x.uuid === s.cur.uuid ? ' selected' : '') + '>' + esc(x.name) + ' · S' + x.size + ' · ' + esc(x.grade || '—') + ' · ' + shortStat(s.type, x) + '</option>').join('');
+    return '<tr><td><b>' + SLOT_LABEL[s.type] + ' ' + count[s.type] + '</b>' + (s.turret ? ' <span class="m">(torreta)</span>' : '') + '</td><td class="n">' + size + '</td><td><select class="cs" data-slot="' + i + '" aria-label="' + SLOT_LABEL[s.type] + ' ' + count[s.type] + '">' + opts + '</select></td><td class="m" data-stat="' + i + '">' + statLine(s.type, ITBYID[s.cur.uuid] || s.cur) + '</td><td class="m" data-note="' + i + '">de serie</td></tr>';
+  }).join('');
+  return '<section class="card" id="cfgcard"><div class="sec" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><h2>Configurador de componentes</h2><button class="back" id="cfg-reset" style="margin-left:auto">Restaurar de serie</button></div>' +
+    '<div class="body"><div id="sum">' + sumHtml(d) + '</div></div><div class="scroll"><table style="min-width:760px"><thead><tr><th>Hueco</th><th>Tamaño</th><th>Componente</th><th>Estadísticas</th><th>Precio</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<p class="m" style="padding:10px 18px 14px;margin:0">Solo se ofrecen piezas compatibles por tamaño. Se recalculan daño, escudo y cuántico; el balance completo de energía y refrigeración no se simula (se muestran los segmentos que genera cada pieza).</p></section>';
+}
+function bindCfg(d) {
+  const card = $('cfgcard');
+  if (!card) return;
+  card.addEventListener('change', ev => {
+    const sel = ev.target.closest('select[data-slot]');
+    if (!sel) return;
+    const i = sel.dataset.slot, s = d.slots[i];
+    SEL[i] = sel.value;
+    card.querySelector('[data-note="' + i + '"]').innerHTML = rowNote(s, sel.value);
+    card.querySelector('[data-stat="' + i + '"]').textContent = statLine(s.type, ITBYID[sel.value] || s.cur);
+    $('sum').innerHTML = sumHtml(d);
+  });
+  $('cfg-reset').addEventListener('click', () => {
+    SEL = {};
+    card.querySelectorAll('select[data-slot]').forEach(sel => { const s = d.slots[sel.dataset.slot]; sel.value = s.cur.uuid; card.querySelector('[data-note="' + sel.dataset.slot + '"]').innerHTML = 'de serie'; card.querySelector('[data-stat="' + sel.dataset.slot + '"]').textContent = statLine(s.type, ITBYID[s.cur.uuid] || s.cur); });
+    $('sum').innerHTML = sumHtml(d);
+  });
 }
 const n1 = v => v == null ? '—' : Number(v).toLocaleString('es-ES', {maximumFractionDigits: 1});
 const pc = v => v == null ? '—' : Math.round(v * 100) + ' %';
@@ -146,7 +252,7 @@ function statsHtml(d) {
     '<div class="scroll"><table style="min-width:420px"><thead><tr><th>Daño</th><th>Resistencia</th><th>Absorción</th><th>Blindaje</th></tr></thead><tbody>' + res + '</tbody></table></div></div></section></div>' +
     '<div class="cols"><section class="card"><div class="sec"><h2>Movimiento</h2></div><div class="body"><div class="tiles">' + tl('SCM m/s', n1(sp.scm)) + tl('Máx. m/s', n1(sp.max)) + tl('0 → SCM (s)', n1(sp.zero_to_scm)) + '</div><div class="tiles">' + tl('Cabeceo °/s', n1(ag.pitch)) + tl('Guiñada °/s', n1(ag.yaw)) + tl('Alabeo °/s', n1(ag.roll)) + '</div></div></section>' +
     '<section class="card"><div class="sec"><h2>Otros datos</h2></div><div class="body">' + kv('PVP en tienda', d.msrp == null ? '—' : n1(d.msrp) + ' USD') + kv('Combustible (capacidad)', n1(d.fuel)) + kv('Cuántico: velocidad', q.quantum_speed ? n1(q.quantum_speed / 1e6) + ' Mm/s' : '—') + kv('Cuántico: alcance', q.quantum_range ? n1(q.quantum_range / 1e9) + ' Gm' : '—') + kv('Cuántico: carga', q.quantum_spool_time == null ? '—' : n1(q.quantum_spool_time) + ' s') + kv('Firma IR / EM', n1((d.signature || {}).ir_shields) + ' / ' + n1((d.signature || {}).em_shields)) + kv('Seguro: reclamación', ins.claim_time == null ? '—' : n1(ins.claim_time) + ' min') + kv('Seguro: acelerar', ins.expedite_cost == null ? '—' : fmt(ins.expedite_cost) + ' aUEC · ' + n1(ins.expedite_time) + ' min') + '</div></section></div>' +
-    '<section class="card"><div class="sec"><h2>Componentes</h2></div>' + (comp ? '<div class="scroll"><table style="min-width:640px"><thead><tr><th>Tipo</th><th>Componente</th><th>Tamaño</th><th>Grado</th><th>Cant.</th><th>Fabricante</th></tr></thead><tbody>' + comp + '</tbody></table></div>' : '<p class="empty">La wiki no lista componentes para esta nave.</p>') + '<p class="m" style="padding:0 18px 14px;margin:0">Cambiar componentes y recalcular las estadísticas: próximamente.</p></section></div>';
+    cfgHtml(d) + '<section class="card"><div class="sec"><h2>Otros componentes</h2></div>' + (comp ? '<div class="scroll"><table style="min-width:640px"><thead><tr><th>Tipo</th><th>Componente</th><th>Tamaño</th><th>Grado</th><th>Cant.</th><th>Fabricante</th></tr></thead><tbody>' + comp + '</tbody></table></div>' : '<p class="empty">La wiki no lista componentes para esta nave.</p>') + '</section></div>';
 }
 
 async function fillStats(s) {
@@ -155,7 +261,9 @@ async function fillStats(s) {
   try {
     const sd = await loadSD();
     const d = s.wid && sd.ships[s.wid];
-    put(d ? statsHtml(d) : '<p class="empty">No hay estadísticas detalladas de esta nave en la wiki.</p>');
+    SEL = {};
+    put(d ? (s.wid_approx ? '<p class="warn" style="margin:0 0 14px">Esta edición no figura aparte en la wiki: se muestran las estadísticas y componentes del modelo base.</p>' : '') + statsHtml(d) : '<p class="empty">No hay estadísticas detalladas de esta nave en la wiki.</p>');
+    if (d && token === STATS_TOKEN) bindCfg(d);
   } catch (e) { put('<p class="empty">No se pudieron cargar las estadísticas.</p>'); }
 }
 
