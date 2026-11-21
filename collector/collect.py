@@ -7,7 +7,7 @@ Uso:
 
 Solo usa la libreria estandar de Python 3.9+.
 """
-import json, os, sys, time, urllib.request, urllib.error
+import json, os, re, sys, time, urllib.request, urllib.error
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
@@ -167,33 +167,6 @@ def wiki_get(path, timeout=60, tries=2):
     raise last
 
 
-def trim(v):
-    """Recorta listas largas a 2 elementos para que el diagnostico sea corto."""
-    if isinstance(v, dict):
-        return {k: trim(x) for k, x in v.items()}
-    if isinstance(v, list):
-        return [trim(x) for x in v[:2]]
-    return v
-
-
-def wiki_diag():
-    """Diagnostico de la API de la wiki (specs, componentes y posibles precios de UEX por nave)."""
-    res = {}
-    for label, path in (("list", "vehicles"), ("carrack", "vehicles/carrack?include=ports,components")):
-        try:
-            body = wiki_get(path)
-            d = body.get("data", body)
-            item = d[0] if isinstance(d, list) and d else d
-            item = item if isinstance(item, dict) else {}
-            res[label] = {"is_list": isinstance(d, list), "top_keys": sorted(body),
-                          "meta": trim(body.get("meta")), "keys": sorted(item),
-                          "uex_prices": trim(item.get("uex_prices")),
-                          "basic": {k: item.get(k) for k in ("name", "msrp", "size_class", "role", "career")}}
-        except Exception as e:
-            res[label] = {"error": str(e)}
-    return res
-
-
 TAGS = {"is_cargo": "Carga", "is_military": "Militar", "is_mining": "Minería", "is_exploration": "Exploración",
         "is_salvage": "Salvamento", "is_medical": "Médica", "is_racing": "Carreras", "is_passenger": "Pasajeros",
         "is_starter": "Inicial", "is_stealth": "Sigilo", "is_refuel": "Repostaje", "is_repair": "Reparación",
@@ -201,7 +174,7 @@ TAGS = {"is_cargo": "Carga", "is_military": "Militar", "is_mining": "Minería", 
         "is_interdiction": "Interdicción", "is_construction": "Construcción", "is_ground_vehicle": "Terrestre"}
 
 
-def normalize_ships(raw, where, now):
+def normalize_ships(raw, where, now, wid_of=None):
     """Une naves + precios de compra/alquiler + ubicacion del terminal."""
     prices = {}
 
@@ -227,7 +200,7 @@ def normalize_ships(raw, where, now):
                     "maker": v.get("company_name"), "scu": v.get("scu"), "crew": v.get("crew"),
                     "mass": v.get("mass"), "size": [v.get("length"), v.get("width"), v.get("height")],
                     "pad": v.get("pad_type"), "tags": [t for f, t in TAGS.items() if v.get(f)],
-                    "photo": v.get("url_photo"), "store": v.get("url_store"), "buy": p["buy"], "rent": p["rent"]})
+                    "photo": v.get("url_photo"), "store": v.get("url_store"), "wid": wid_of(v) if wid_of else None, "buy": p["buy"], "rent": p["rent"]})
     out.sort(key=lambda x: ((x["maker"] or ""), (x["full"] or x["name"] or "")))
     return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "ships": out}
 
@@ -243,41 +216,129 @@ def shape(v, depth=3):
     return v[:60] if isinstance(v, str) else v
 
 
-WANT = ["ports", "components", "power", "power_pools", "insurance", "skus", "msrp", "role", "career", "size",
-        "signature", "turrets", "parts", "images", "loaner", "production_status", "cooling", "foci", "type"]
+KEEP = {"WeaponGun", "Turret", "TurretBase", "MissileLauncher", "Missile", "Shield", "PowerPlant", "Cooler",
+        "QuantumDrive", "Radar", "MainThruster", "ManneuverThruster", "FuelTank", "QuantumFuelTank",
+        "WeaponDefensive", "EMP", "QuantumInterdictionGenerator", "TractorBeam", "SalvageHead"}
 
 
-def wiki_sample(uex_vehicles):
-    """TEMPORAL: estructura de una nave completa de la wiki y comprobacion de como unir sus naves
-    con las de UEX (por uuid o por nombre). Se quitara cuando la ventana de Naves este terminada."""
-    res = {}
-    try:
-        body = wiki_get("vehicles/gladius?include=ports,components")
-        g = body.get("data", body)
-        res["gladius_keys"] = sorted(g)
-        res["sections"] = {k: shape(g[k], 4) for k in WANT if k in g}
-        u = next((v for v in uex_vehicles if (v.get("name") or "").lower() == "gladius"), None) or {}
-        res["gladius_match"] = {"wiki_uuid": g.get("uuid"), "wiki_game_name": g.get("game_name"),
-                                "uex_uuid": u.get("uuid"), "uex_name_full": u.get("name_full")}
-    except Exception as e:
-        res["gladius"] = {"error": str(e)}
-    uex_uuids = {v.get("uuid") for v in uex_vehicles if v.get("uuid")}
-    uex_names = {(v.get("name_full") or "").lower() for v in uex_vehicles}
-    uuids, names, page, last, ok, failed = set(), set(), 1, 1, 0, 0
-    while page <= min(last, 20):
+def flatten_ports(ports, out, seen, depth=0):
+    """Recorre los puertos de una nave (y los hijos de cada uno) y guarda los componentes utiles."""
+    for p in ports or []:
+        it = p.get("equipped_item") or {}
+        t = it.get("type") or p.get("type")
+        seen[t] = seen.get(t, 0) + 1
+        if it and t in KEEP and "PLACEHOLDER" not in (it.get("name") or ""):
+            sz = p.get("sizes") or {}
+            out.append({"type": t, "label": it.get("type_label"), "name": it.get("name"), "size": it.get("size"),
+                        "grade": it.get("grade"), "class": it.get("class"), "min": sz.get("min"), "max": sz.get("max"),
+                        "maker": (it.get("manufacturer") or {}).get("name")})
+        flatten_ports(p.get("ports"), out, seen, depth + 1)
+
+
+def compact_ship(w, seen):
+    """Se queda con lo que usa la web de una nave de la wiki (la ficha original pesa mucho)."""
+    flat, grouped = [], {}
+    flatten_ports(w.get("ports"), flat, seen)
+    for x in flat:
+        k = (x["type"], x["name"], x["size"], x["grade"], x["maker"])
+        if k in grouped:
+            grouped[k]["n"] += 1
+        else:
+            grouped[k] = dict(x, n=1)
+    sh, wp, ar = w.get("shield") or {}, w.get("weaponry") or {}, w.get("armor") or {}
+    sig = w.get("signature") or {}
+    img = ((w.get("images") or [{}])[0] or {}).get("thumbnail_url")
+    return {"uuid": w.get("uuid"), "name": w.get("name"), "game_name": w.get("game_name"),
+            "maker": (w.get("manufacturer") or {}).get("name"), "role": w.get("role"), "career": w.get("career"),
+            "size_class": w.get("size_class"), "msrp": w.get("msrp"), "crew": w.get("crew"),
+            "cargo": w.get("cargo_capacity"), "mass": w.get("mass_total"), "dim": w.get("dimension"),
+            "health": w.get("health"),
+            "shield": {"hp": sh.get("hp"), "regen": sh.get("regeneration"), "face": sh.get("face_type"),
+                       "resist": sh.get("resistance"), "absorb": sh.get("absorption")},
+            "weapons": {"dps": wp.get("pilot_dps"), "sustained": wp.get("pilot_sustained_dps"),
+                        "alpha": wp.get("pilot_alpha"), "fixed": (wp.get("fixed_weapons") or {}).get("weapons"),
+                        "missiles": wp.get("missiles"), "snapshot": w.get("weapon_snapshot")},
+            "speed": w.get("speed"), "agility": w.get("agility"), "fuel": (w.get("fuel") or {}).get("capacity"),
+            "quantum": w.get("quantum"), "armor": {"health": ar.get("health"), "damage": ar.get("damage_multiplier")},
+            "signature": {k: sig.get(k) for k in ("ir_shields", "em_shields", "ir_quantum", "em_quantum")},
+            "insurance": w.get("insurance"), "image": img, "ports": list(grouped.values())}
+
+
+def wiki_ships():
+    """Descarga todas las naves de la wiki (11 paginas aprox.). Devuelve ({uuid: ficha}, diagnostico)."""
+    by_uuid, seen, page, last, failed = {}, {}, 1, 1, 0
+    while page <= min(last, 25):
         try:
             body = wiki_get("vehicles?page%5Bnumber%5D=" + str(page))
-            for d in body.get("data", []):
-                uuids.add(d.get("uuid"))
-                names.add((d.get("game_name") or d.get("name") or "").lower())
-            last, ok = (body.get("meta") or {}).get("last_page", 1), ok + 1
-        except Exception:
+            last = (body.get("meta") or {}).get("last_page", 1)
+            for w in body.get("data", []):
+                if w.get("uuid"):
+                    by_uuid[w["uuid"]] = compact_ship(w, seen)
+        except Exception as e:
             failed += 1
+            print(f"Wiki pagina {page} fallida: {e}", file=sys.stderr)
         page += 1
         time.sleep(1)
-    res["match"] = {"pages_ok": ok, "pages_failed": failed, "wiki": len(uuids), "uex": len(uex_uuids),
-                    "uuid_overlap": len(uuids & uex_uuids), "name_overlap": len(names & uex_names)}
+    if not by_uuid or failed > max(2, last // 2):
+        raise RuntimeError(f"Wiki incompleta: {len(by_uuid)} naves, {failed} paginas fallidas")
+    top = dict(sorted(seen.items(), key=lambda kv: -kv[1])[:40])
+    return by_uuid, {"wiki_ships": len(by_uuid), "pages_failed": failed, "port_types": top}
+
+
+SWAP_TYPES = ["WeaponGun", "Shield", "PowerPlant", "Cooler", "QuantumDrive", "Turret", "MissileLauncher"]
+
+
+def first_port(ports, want):
+    for p in ports or []:
+        it = p.get("equipped_item") or {}
+        if it and (it.get("type") or p.get("type")) == want:
+            return p
+        found = first_port(p.get("ports"), want)
+        if found:
+            return found
+    return None
+
+
+def items_sample():
+    """TEMPORAL: enseña como son los puertos con arma/escudo/etc. instalados y como es el catalogo de
+    objetos de la wiki, para poder construir el cambio de componentes. Se quitara despues."""
+    res = {}
+    for label, path in (("gladius", "vehicles/gladius?include=ports"), ("andromeda", "vehicles/andromeda?include=ports")):
+        try:
+            g = wiki_get(path).get("data") or {}
+            res[label] = {t: shape(first_port(g.get("ports"), t), 6) for t in SWAP_TYPES + ["TurretBase"]
+                          if first_port(g.get("ports"), t)}
+        except Exception as e:
+            res[label] = {"error": str(e)}
+    for t in ["WeaponGun", "Shield", "PowerPlant", "Cooler", "QuantumDrive"]:
+        try:
+            body = wiki_get("items?filter%5Btype%5D=" + t)
+            m = body.get("meta") or {}
+            res["item_" + t] = {"meta": {k: m.get(k) for k in ("current_page", "last_page", "per_page", "total")},
+                                "first": shape((body.get("data") or [None])[0], 6)}
+        except Exception as e:
+            res["item_" + t] = {"error": str(e)}
+        time.sleep(1)
     return res
+
+
+def norm(s):
+    return re.sub(r"[^a-z0-9]", "", (s or "").lower())
+
+
+def match_ships(vehicles, by_uuid):
+    """Une cada nave de UEX con su ficha de la wiki: primero por uuid, si no por nombre."""
+    by_name = {norm(w.get("game_name") or w.get("name")): u for u, w in by_uuid.items()}
+    matched, n_uuid, n_name, missing = {}, 0, 0, []
+    for v in vehicles:
+        if v.get("uuid") in by_uuid:
+            matched[v["id"]], n_uuid = v["uuid"], n_uuid + 1
+        elif norm(v.get("name_full")) in by_name:
+            matched[v["id"]], n_name = by_name[norm(v.get("name_full"))], n_name + 1
+        else:
+            missing.append(v.get("name_full") or v.get("name"))
+    return matched, {"matched_by_uuid": n_uuid, "matched_by_name": n_name, "unmatched": missing[:40],
+                     "unmatched_total": len(missing)}
 
 
 def ships(where):
@@ -292,7 +353,6 @@ def ships(where):
         out[key] = data if isinstance(data, list) else []
         diag["endpoints"][key] = name
         diag["counts"][key] = len(out[key])
-    diag["wiki"] = wiki_sample(out["vehicles"])
     return out, diag
 
 
@@ -345,25 +405,37 @@ def prev_json(name):
 
 
 def static_data(live, now, where):
-    """Naves y sus precios: solo cambian con un parche, asi que solo se piden a UEX cuando toca.
-    Devuelve (ships_json, state, razon). Si no toca refrescar, reutiliza lo ya publicado."""
-    state, old_ships = prev_json("static.json"), prev_json("ships.json")
+    """Naves (UEX) y sus fichas (wiki): solo cambian con un parche, asi que solo se piden cuando toca.
+    Devuelve (ships_json, detalle_json, state, razon). Si no toca refrescar, reutiliza lo ya publicado."""
+    state, old_ships, old_detail = prev_json("static.json"), prev_json("ships.json"), prev_json("shipdata.json")
     changed = bool(live) and (not state or state.get("version") != live)
     first_seen = now if (changed or not state) else state.get("first_seen", now)
     last = (state or {}).get("fetched_at", 0)
     window = now - first_seen < REFRESH_WINDOW_D * 86400 and now - last > REFRESH_EVERY_H * 3600
-    reason = ("forzado a mano" if FORCE else "sin datos previos" if not (state and old_ships) else
+    reason = ("forzado a mano" if FORCE else "sin datos previos" if not (state and old_ships and old_detail) else
               "parche nuevo" if changed else "refresco tras parche" if window else None)
     if reason:
         try:
             raw, diag = ships(where)
-            ship_data = normalize_ships(raw, where, now)
-            return ship_data, {"version": live, "first_seen": first_seen, "fetched_at": now, "diag": diag}, reason
+            try:
+                by_uuid, wdiag = wiki_ships()
+            except Exception as e:                       # sin la wiki, las naves siguen funcionando con UEX
+                print("Wiki no disponible:", e, file=sys.stderr)
+                by_uuid, wdiag = {}, {"error": str(e)}
+            matched, mdiag = match_ships(raw["vehicles"], by_uuid)
+            diag["wiki"] = dict(wdiag, **mdiag)
+            try:
+                diag["wiki_items"] = items_sample()
+            except Exception as e:
+                diag["wiki_items"] = {"error": str(e)}
+            ship_data = normalize_ships(raw, where, now, lambda v: matched.get(v.get("id")))
+            detail = {"generated_at": iso(now), "ships": {u: by_uuid[u] for u in set(matched.values())}}
+            return ship_data, detail, {"version": live, "first_seen": first_seen, "fetched_at": now, "diag": diag}, reason
         except (SystemExit, Exception) as e:
             print("No se pudieron refrescar las naves:", e, file=sys.stderr)
-            if not (state and old_ships):
-                return {"generated_at": None, "ships": []}, {"version": live}, "error"
-    return old_ships, state, None
+            if not (state and old_ships and old_detail):
+                return {"generated_at": None, "ships": []}, {"ships": {}}, {"version": live}, "error"
+    return old_ships, old_detail, state, None
 
 
 def main():
@@ -382,8 +454,8 @@ def main():
         where = locate(fetch("terminals", tries=2))
     except SystemExit:
         where = {}
-    ship_data, state, reason = static_data(live, now, where)  # naves: solo con parche nuevo
-    data, meta = build(fetch("commodities_prices_all"), where)  # precios: SIEMPRE
+    ship_data, detail, state, reason = static_data(live, now, where)   # naves: solo con parche nuevo
+    data, meta = build(fetch("commodities_prices_all"), where)         # precios: SIEMPRE
     meta["game_versions"] = gv
     meta["static_diag"] = {"version": live, "ships_refreshed": reason, "fetched_at": iso(state.get("fetched_at")),
                            "first_seen": iso(state.get("first_seen"))}
@@ -395,7 +467,8 @@ def main():
         (OUT / "guides.json").write_text(json.dumps(found, ensure_ascii=False), encoding="utf-8")
     except Exception as e:
         print("Guias no generadas:", e, file=sys.stderr)
-    for name, obj in (("commodities.json", data), ("meta.json", meta), ("ships.json", ship_data), ("static.json", state)):
+    for name, obj in (("commodities.json", data), ("meta.json", meta), ("ships.json", ship_data),
+                      ("shipdata.json", detail), ("static.json", state)):
         tmp = OUT / (name + ".tmp")
         tmp.write_text(json.dumps(obj, ensure_ascii=False), encoding="utf-8")
         tmp.replace(OUT / name)
