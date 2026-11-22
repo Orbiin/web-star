@@ -67,6 +67,31 @@ h2{margin:0;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:v
 .dl.up{color:var(--gr)}.dl.dn{color:var(--rd)}
 select.cs{height:40px;font-size:13px;max-width:360px;width:100%}
 .warn{font-size:13px;color:var(--am);margin:8px 0 0}
+.catt{margin:20px 0 8px;font:600 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cy)}
+.slotgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.slot{display:flex;align-items:center;gap:12px;padding:12px;background:#0b141c;border:1px solid #1f3a4a;border-radius:8px}
+.slot.chg{border-color:var(--am);background:rgba(255,180,58,.06)}
+.sz,.szb{flex:0 0 auto;min-width:34px;height:30px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;background:var(--cy);color:#04202a;font:700 13px 'JetBrains Mono',monospace}
+.mid{flex:1;min-width:0}.nm{font-weight:700;font-size:15px}.sm{font-size:12px;line-height:1.5}
+.val{text-align:right;min-width:80px}.val b{display:block;font:600 22px 'JetBrains Mono',monospace}.val span{font:11px 'JetBrains Mono',monospace;color:var(--mut);letter-spacing:.1em}
+.ab2{min-height:36px;padding:0 12px;background:transparent;border:1px solid #1d5b69;color:var(--cy);border-radius:6px;font-family:inherit;font-weight:600;cursor:pointer}
+.ab2:hover{background:rgba(63,214,232,.12)}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(2,6,10,.82);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal[hidden]{display:none}
+.mbox{width:min(1180px,100%);max-height:92vh;display:flex;flex-direction:column;background:#0b141c;border:1px solid var(--line);border-radius:12px}
+.mhead{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+.mtools{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;padding:12px 18px}
+.mscroll{overflow:auto;flex:1;padding:0 12px;min-height:200px}
+.mscroll table{min-width:980px}
+.mscroll th{position:sticky;top:0;background:#0f1b25;cursor:pointer;user-select:none;z-index:1}
+.mscroll tr[data-pick]{cursor:pointer}
+.mscroll tr[data-pick]:hover td{background:rgba(63,214,232,.08)}
+.mscroll tr.cur td{background:rgba(255,180,58,.07)}
+.mfoot{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px 18px;border-top:1px solid var(--line)}
+.chipf{padding:7px 12px;border:1px solid var(--line);background:#0d1a24;color:#b7c9d6;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer}
+.chipf.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.14)}
+.nmcell{display:flex;align-items:center;gap:10px}
+.fl{font:11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -158,6 +183,7 @@ function rowNote(s, uuid) {
   const it = ITBYID[uuid], p = it && it.price;
   return p ? 'desde ' + fmt(p.price) + ' aUEC · ' + esc(p.terminal || '') + (p.place ? ' (' + esc(p.place) + (p.system ? ', ' + esc(p.system) : '') + ')' : '') : 'sin precio en tiendas';
 }
+// fuel_rate de las piezas va por km y el alcance de la nave esta en metros: de ahi el * 1000
 function calc(d, sel) {
   const w = d.weapons || {}, sh = d.shield || {}, q = d.quantum || {};
   const r = {dps: w.dps || 0, sus: w.sustained || 0, alpha: w.alpha || 0, hp: sh.hp || 0, regen: sh.regen || 0, pgen: d.power_gen, cgen: d.cool_gen,
@@ -175,7 +201,7 @@ function calc(d, sel) {
     else if (s.type === 'Cooler') r.cgen = (r.cgen || 0) + dl('seg');
     else if (s.type === 'QuantumDrive') {
       if (nw.speed == null || nw.spool == null) r.partial = true;
-      else { r.qspeed = nw.speed; r.qspool = nw.spool; if (nw.fuel_rate && q.quantum_fuel_capacity) r.qrange = q.quantum_fuel_capacity / nw.fuel_rate; }
+      else { r.qspeed = nw.speed; r.qspool = nw.spool; if (nw.fuel_rate && q.quantum_fuel_capacity) r.qrange = q.quantum_fuel_capacity / nw.fuel_rate * 1000; }
     }
   });
   return r;
@@ -196,37 +222,152 @@ function sumHtml(d) {
     (r.turret ? '<p class="warn">Las armas de torretas no se suman al DPS del piloto.</p>' : '') +
     (r.partial ? '<p class="warn">Alguna pieza no tiene todos los datos: el cálculo puede ser aproximado.</p>' : '');
 }
+const CAT_ORDER = [['WeaponGun', 'Armas'], ['Shield', 'Escudos'], ['PowerPlant', 'Generadores'], ['Cooler', 'Refrigeradores'], ['QuantumDrive', 'Motor cuántico']];
+const UNIT = {WeaponGun: 'DPS', Shield: 'HP', PowerPlant: 'seg.', Cooler: 'seg.', QuantumDrive: 'Mm/s'};
+const n2 = v => Number(v).toLocaleString('es-ES', {maximumFractionDigits: 2});
+const bigVal = (t, x) => { const v = x[METRIC[t]]; return v == null ? '—' : t === 'QuantumDrive' ? n1(v / 1e6) : t === 'Shield' ? fmt(v) : n1(v); };
+function slotLines(t, x) {
+  const base = esc(x.maker || '') + (t === 'WeaponGun' ? (x.kind ? ' · ' + esc(x.kind) : '') : (x.class ? ' · ' + esc(x.class) : ''));
+  if (t === 'WeaponGun') return [base, 'Alfa ' + n1(x.alpha) + ' · ' + fmt(x.rpm || 0) + ' rpm · ' + fmt(x.range || 0) + ' m'];
+  if (t === 'Shield') return [base, 'Regen. ' + n1(x.regen) + '/s · Res. Fís ' + pc(x.res && x.res[0]) + ' · Dist ' + pc(x.res && x.res[2])];
+  if (t === 'QuantumDrive') return [base, 'Carga ' + n1(x.spool) + ' s · Enfr. ' + n1(x.cooldown) + ' s'];
+  return [base, 'EM ' + fmt(x.em || 0) + ' · HP ' + fmt(x.dur || 0)];
+}
+function slotCard(d, i) {
+  const s = d.slots[i], uuid = SEL[i] || s.cur.uuid, x = ITBYID[uuid] || s.cur, stock = ITBYID[s.cur.uuid] || s.cur, ch = uuid !== s.cur.uuid;
+  const m = METRIC[s.type], dv = x[m] != null && stock[m] != null ? x[m] - stock[m] : 0;
+  const chip = ch && Math.abs(dv) > 1e-9 ? '<span class="dl ' + (dv > 0 ? 'up' : 'dn') + '">' + (dv > 0 ? '▲ ' : '▼ ') + (s.type === 'QuantumDrive' ? n1(Math.abs(dv) / 1e6) : n1(Math.abs(dv))) + '</span>' : '';
+  const ln = slotLines(s.type, x), size = s.min == null ? '—' : s.min === s.max ? 'S' + s.min : 'S' + s.min + '–' + s.max;
+  const tag = s.type !== 'WeaponGun' ? '' : s.turret ? ' <span class="tag" style="color:var(--am)">TORRETA</span>' : ' <span class="tag" style="color:var(--gr)">PILOTO</span>';
+  return '<div class="slot' + (ch ? ' chg' : '') + '"><div class="sz">' + size + '</div><div class="mid"><div class="nm">' + esc(x.name) + tag + '</div><div class="m sm">' + ln[0] + '</div><div class="m sm">' + ln[1] + '</div>' +
+    (ch ? '<div class="sm" style="color:var(--am)">Antes: ' + esc(stock.name) + ' · ' + rowNote(s, uuid) + '</div>' : '') + '</div><div class="val"><b>' + bigVal(s.type, x) + '</b><span>' + UNIT[s.type] + '</span>' + chip + '</div><button class="ab2" data-swap="' + i + '">Cambiar</button></div>';
+}
+function cfgInner(d) {
+  const cats = CAT_ORDER.map(c => {
+    const idx = d.slots.map((s, i) => i).filter(i => d.slots[i].type === c[0]);
+    return idx.length ? '<div class="catt">' + c[1] + ' <span class="m">(' + idx.length + ')</span></div><div class="slotgrid">' + idx.map(i => slotCard(d, i)).join('') + '</div>' : '';
+  }).join('');
+  return '<div class="sec" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><h2>Configurador de componentes</h2><button class="back" data-reset="1" style="margin-left:auto">Restaurar todo de serie</button></div>' +
+    '<div class="body"><div id="sum">' + sumHtml(d) + '</div>' + cats +
+    '<p class="m" style="margin:16px 0 0;font-size:13px">Solo se ofrecen piezas compatibles por tamaño. Se recalculan daño, escudo y cuántico; el balance completo de energía y refrigeración no se simula (se muestran los segmentos que genera cada pieza).</p></div>';
+}
 function cfgHtml(d) {
   if (!(d.slots || []).length || !IT || !Object.keys(IT.types || {}).length) return '<section class="card"><div class="sec"><h2>Configurador de componentes</h2></div><p class="empty">No está disponible para esta nave.</p></section>';
-  const count = {};
-  const rows = d.slots.map((s, i) => {
-    count[s.type] = (count[s.type] || 0) + 1;
-    const size = s.min == null ? '' : s.min === s.max ? 'S' + s.min : 'S' + s.min + '–S' + s.max;
-    const opts = pool(s).map(x => '<option value="' + esc(x.uuid) + '"' + (x.uuid === s.cur.uuid ? ' selected' : '') + '>' + esc(x.name) + ' · S' + x.size + ' · ' + esc(x.grade || '—') + ' · ' + shortStat(s.type, x) + '</option>').join('');
-    return '<tr><td><b>' + SLOT_LABEL[s.type] + ' ' + count[s.type] + '</b>' + (s.turret ? ' <span class="m">(torreta)</span>' : '') + '</td><td class="n">' + size + '</td><td><select class="cs" data-slot="' + i + '" aria-label="' + SLOT_LABEL[s.type] + ' ' + count[s.type] + '">' + opts + '</select></td><td class="m" data-stat="' + i + '">' + statLine(s.type, ITBYID[s.cur.uuid] || s.cur) + '</td><td class="m" data-note="' + i + '">de serie</td></tr>';
+  return '<section class="card" id="cfgcard">' + cfgInner(d) + '</section>';
+}
+function cfgRender(d) { const c = $('cfgcard'); if (c) c.innerHTML = cfgInner(d); }
+
+// ---------- Ventana "Cambiar pieza" ----------
+const pcs = v => v == null ? '—' : Math.round(v * 100) + ' %';
+const getCols = t => ({
+  WeaponGun: [['dps', 'DPS', n1], ['alpha', 'Alfa', n1], ['rpm', 'Cadencia', fmt], ['range', 'Alcance', fmt], ['speed', 'Vel.', fmt], ['spread', 'Dispers.', n2], ['pwr', 'Potencia', n2], ['em', 'EM', fmt], ['ammo', 'Munición', v => v ? fmt(v) : '—'], ['dur', 'HP', fmt]],
+  Shield: [['hp', 'HP', fmt], ['regen', 'Regen. /s', n1], ['r0', 'Res. Fís', pcs], ['r1', 'Res. Ener', pcs], ['r2', 'Res. Dist', pcs], ['em', 'EM', fmt], ['pwr', 'Potencia', n2], ['dur', 'HP pieza', fmt]],
+  PowerPlant: [['seg', 'Segmentos', n1], ['em', 'EM', fmt], ['dur', 'HP', fmt]],
+  Cooler: [['seg', 'Segmentos', n1], ['ir', 'IR', fmt], ['em', 'EM', fmt], ['dur', 'HP', fmt]],
+  QuantumDrive: [['speed', 'Velocidad', v => n1(v / 1e6) + ' Mm/s'], ['spool', 'Carga s', n1], ['cooldown', 'Enfr. s', n1], ['qr', 'Alcance', v => n1(v / 1e9) + ' Gm'], ['em', 'EM', fmt], ['dur', 'HP', fmt]]
+})[t];
+const DMG_F = [['', 'Todos'], ['energy', 'Energía'], ['ballistic', 'Balístico'], ['distortion', 'Distorsión']];
+const WT_F = [['', 'Todos'], ['Cannon', 'Cañón'], ['Gatling', 'Gatling'], ['Repeater', 'Repetidora'], ['Scattergun', 'Escopeta']];
+let MOD = null;
+function colVal(x, k, d) {
+  if (k === 'price') return x.price ? x.price.price : null;
+  if (/^r[0-2]$/.test(k)) return x.res ? x.res[+k[1]] : null;
+  if (k === 'qr') { const c = (d.quantum || {}).quantum_fuel_capacity; return c && x.fuel_rate ? c / x.fuel_rate * 1000 : null; }
+  return x[k];
+}
+function swapRows(M) {
+  const s = M.d.slots[M.i], t = s.type, q = M.q.toLowerCase();
+  let list = pool(s).filter(x => (!q || (x.name + ' ' + (x.maker || '') + ' ' + (x.kind || '')).toLowerCase().includes(q)) &&
+    (!M.f1 || (t === 'WeaponGun' ? x.dmg === M.f1 : x.class === M.f1)) && (!M.f2 || x.wtype === M.f2));
+  const key = M.sort;
+  list.sort((a, b) => {
+    if (key === 'name') return M.dir * String(a.name).localeCompare(String(b.name));
+    const va = colVal(a, key, M.d), vb = colVal(b, key, M.d);
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    return M.dir * (va - vb);
+  });
+  return list;
+}
+function swapTableHtml(M) {
+  const s = M.d.slots[M.i], t = s.type, cols = getCols(t).concat([['price', 'Precio', v => fmt(v) + ' aUEC']]), list = swapRows(M);
+  const cur = SEL[M.i] || s.cur.uuid, arrow = k => M.sort === k ? (M.dir > 0 ? ' ▲' : ' ▼') : '';
+  const head = '<th data-sort="name">Pieza' + arrow('name') + '</th>' + cols.map(c => '<th data-sort="' + c[0] + '">' + c[1] + arrow(c[0]) + '</th>').join('');
+  const body = list.map(x => {
+    const tags = (x.uuid === s.cur.uuid ? ' <span class="tag" style="color:var(--am)">DE SERIE</span>' : '') + (x.uuid === cur && x.uuid !== s.cur.uuid ? ' <span class="tag" style="color:var(--cy)">ELEGIDA</span>' : '') + (t === 'WeaponGun' && x.dmg ? ' <span class="tag m">' + ({energy: 'ENERGÍA', ballistic: 'BALÍSTICO', distortion: 'DISTORSIÓN'})[x.dmg] + '</span>' : '');
+    const sub = esc(x.maker || '') + (t === 'WeaponGun' ? (x.kind ? ' · ' + esc(x.kind) : '') : (x.class ? ' · ' + esc(x.class) + ' · grado ' + esc(x.grade || '—') : ''));
+    const cells = cols.map(c => { const v = colVal(x, c[0], M.d); return '<td class="n' + (c[0] === METRIC[t] ? ' g' : '') + '">' + (v == null ? '—' : c[2](v)) + '</td>'; }).join('');
+    return '<tr data-pick="' + esc(x.uuid) + '"' + (x.uuid === s.cur.uuid ? ' class="cur"' : '') + '><td><div class="nmcell"><span class="szb">S' + x.size + '</span><div><b>' + esc(x.name) + '</b>' + tags + '<div class="m sm">' + sub + '</div></div></div></td>' + cells + '</tr>';
   }).join('');
-  return '<section class="card" id="cfgcard"><div class="sec" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><h2>Configurador de componentes</h2><button class="back" id="cfg-reset" style="margin-left:auto">Restaurar de serie</button></div>' +
-    '<div class="body"><div id="sum">' + sumHtml(d) + '</div></div><div class="scroll"><table style="min-width:760px"><thead><tr><th>Hueco</th><th>Tamaño</th><th>Componente</th><th>Estadísticas</th><th>Precio</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-    '<p class="m" style="padding:10px 18px 14px;margin:0">Solo se ofrecen piezas compatibles por tamaño. Se recalculan daño, escudo y cuántico; el balance completo de energía y refrigeración no se simula (se muestran los segmentos que genera cada pieza).</p></section>';
+  return list.length ? '<table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>' : '<p class="empty">Ninguna pieza coincide con estos filtros.</p>';
+}
+function swapFootHtml(M) {
+  const s = M.d.slots[M.i], total = pool(s).length, n = swapRows(M).length;
+  return '<span class="m">' + n + ' de ' + total + ' piezas compatibles (' + (s.min === s.max ? 'S' + s.min : 'S' + s.min + '–S' + s.max) + ')</span>' +
+    (M.same.length > 1 ? '<label style="display:flex;gap:8px;align-items:center;margin:0;text-transform:none;letter-spacing:0;font-size:14px;color:var(--txt)"><input type="checkbox" id="sw-all"' + (M.all ? ' checked' : '') + ' style="height:auto;width:auto"> Aplicar a las ' + M.same.length + ' piezas idénticas</label>' : '') +
+    '<span style="margin-left:auto;display:flex;gap:8px"><button class="back" id="sw-stock">Restaurar de serie</button><button class="back" id="sw-cancel">Cancelar</button></span>';
+}
+function swapToolsHtml(M) {
+  const s = M.d.slots[M.i], chips = (arr, key, cur) => arr.map(o => '<button class="chipf' + (cur === o[0] ? ' on' : '') + '" data-' + key + '="' + esc(o[0]) + '">' + o[1] + '</button>').join('');
+  let h = '<div><div class="fl">Buscar</div><input id="sw-q" placeholder="Nombre, fabricante…" value="' + esc(M.q) + '" style="width:240px" autocomplete="off"></div>';
+  if (s.type === 'WeaponGun') h += '<div><div class="fl">Tipo de daño</div>' + chips(DMG_F, 'f1', M.f1) + '</div><div><div class="fl">Tipo de arma</div>' + chips(WT_F, 'f2', M.f2) + '</div>';
+  else { const cl = [...new Set(pool(s).map(x => x.class).filter(Boolean))].sort().map(c => [c, c]); h += '<div><div class="fl">Clase</div>' + chips([['', 'Todas']].concat(cl), 'f1', M.f1) + '</div>'; }
+  return h;
+}
+function swapRefresh(tools) {
+  if (tools) $('swtools').innerHTML = swapToolsHtml(MOD);
+  $('swtable').innerHTML = swapTableHtml(MOD);
+  $('swfoot').innerHTML = swapFootHtml(MOD);
+}
+function openSwap(d, i) {
+  ensureModal();
+  const s = d.slots[i], eff = j => SEL[j] || d.slots[j].cur.uuid;
+  const same = d.slots.map((x, j) => j).filter(j => d.slots[j].type === s.type && d.slots[j].min === s.min && d.slots[j].max === s.max && d.slots[j].turret === s.turret && eff(j) === eff(i));
+  MOD = {d, i, same, all: same.length > 1, sort: METRIC[s.type], dir: -1, q: '', f1: '', f2: ''};
+  $('swt').textContent = 'Cambiar ' + SLOT_LABEL[s.type].toLowerCase() + ' · ' + (s.min === s.max ? 'S' + s.min : 'S' + s.min + '–S' + s.max) + (s.turret ? ' (torreta)' : '');
+  swapRefresh(true);
+  $('swap').hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('sw-q').focus();
+}
+function closeSwap() { if ($('swap')) { $('swap').hidden = true; document.body.style.overflow = ''; } MOD = null; }
+function applyPick(uuid) {
+  const M = MOD, all = $('sw-all') ? $('sw-all').checked : false;
+  (all ? M.same : [M.i]).forEach(j => { if (uuid === M.d.slots[j].cur.uuid) delete SEL[j]; else SEL[j] = uuid; });
+  const d = M.d;
+  closeSwap();
+  cfgRender(d);
+}
+function ensureModal() {
+  if ($('swap')) return;
+  document.body.insertAdjacentHTML('beforeend', '<div id="swap" class="modal" hidden><div class="mbox" role="dialog" aria-modal="true" aria-labelledby="swt"><div class="mhead"><h2 id="swt" style="font-size:16px"></h2><button class="back" id="sw-x" aria-label="Cerrar">✕</button></div><div class="mtools" id="swtools"></div><div class="mscroll" id="swtable"></div><div class="mfoot" id="swfoot"></div></div></div>');
+  const sw = $('swap');
+  sw.addEventListener('click', ev => {
+    const T = ev.target;
+    if (T === sw || T.closest('#sw-x') || T.closest('#sw-cancel')) return closeSwap();
+    const th = T.closest('[data-sort]');
+    if (th) { const k = th.dataset.sort; if (MOD.sort === k) MOD.dir *= -1; else { MOD.sort = k; MOD.dir = (k === 'name' || k === 'price') ? 1 : -1; } return swapRefresh(false); }
+    if (T.closest('[data-f1]')) { MOD.f1 = T.closest('[data-f1]').dataset.f1; return swapRefresh(true); }
+    if (T.closest('[data-f2]')) { MOD.f2 = T.closest('[data-f2]').dataset.f2; return swapRefresh(true); }
+    if (T.closest('#sw-stock')) return applyPick(MOD.d.slots[MOD.i].cur.uuid);
+    const row = T.closest('[data-pick]');
+    if (row) applyPick(row.dataset.pick);
+  });
+  sw.addEventListener('input', ev => { if (ev.target.id === 'sw-q') { MOD.q = ev.target.value; $('swtable').innerHTML = swapTableHtml(MOD); $('swfoot').innerHTML = swapFootHtml(MOD); } });
+  sw.addEventListener('change', ev => { if (ev.target.id === 'sw-all') MOD.all = ev.target.checked; });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && MOD) closeSwap(); });
 }
 function bindCfg(d) {
   const card = $('cfgcard');
   if (!card) return;
-  card.addEventListener('change', ev => {
-    const sel = ev.target.closest('select[data-slot]');
-    if (!sel) return;
-    const i = sel.dataset.slot, s = d.slots[i];
-    SEL[i] = sel.value;
-    card.querySelector('[data-note="' + i + '"]').innerHTML = rowNote(s, sel.value);
-    card.querySelector('[data-stat="' + i + '"]').textContent = statLine(s.type, ITBYID[sel.value] || s.cur);
-    $('sum').innerHTML = sumHtml(d);
-  });
-  $('cfg-reset').addEventListener('click', () => {
-    SEL = {};
-    card.querySelectorAll('select[data-slot]').forEach(sel => { const s = d.slots[sel.dataset.slot]; sel.value = s.cur.uuid; card.querySelector('[data-note="' + sel.dataset.slot + '"]').innerHTML = 'de serie'; card.querySelector('[data-stat="' + sel.dataset.slot + '"]').textContent = statLine(s.type, ITBYID[s.cur.uuid] || s.cur); });
-    $('sum').innerHTML = sumHtml(d);
+  card.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-swap]');
+    if (b) return openSwap(d, +b.dataset.swap);
+    if (ev.target.closest('[data-reset]')) { SEL = {}; cfgRender(d); }
   });
 }
+
 const n1 = v => v == null ? '—' : Number(v).toLocaleString('es-ES', {maximumFractionDigits: 1});
 const pc = v => v == null ? '—' : Math.round(v * 100) + ' %';
 const rng = (o, f) => !o ? '—' : (o.minimum === o.maximum ? f(o.maximum) : f(o.minimum) + ' – ' + f(o.maximum));
