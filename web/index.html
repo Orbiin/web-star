@@ -41,6 +41,25 @@ a{color:var(--cy)}
 .tab{min-height:44px;padding:0 20px;background:#0d1a24;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;font-family:inherit;font-size:15px;cursor:pointer}
 .tab.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12);text-shadow:0 0 10px var(--cy)}
 .note{font-size:12px;color:var(--am)}
+
+/* ---- móvil: las tablas pasan a tarjetas para ver los datos clave sin deslizar ---- */
+.mobbar{display:none}
+@media(max-width:760px){
+  .mobbar{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--mut);font-size:13px}
+  table.cards{min-width:0!important;width:100%}
+  table.cards thead{display:none}
+  table.cards tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  table.cards td{display:block;padding:0;border:0;white-space:normal}
+  table.cards td::before{content:attr(data-label);display:block;font:10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
+  table.cards td.full{grid-column:1/-1}
+  table.cards td.nolabel::before{display:none}
+  table.cards td.nolabel{font-size:16px}
+  table.cards tr:first-child td{background:none}
+  table.cards tbody tr:first-child{background:rgba(63,214,232,.08)}
+  table.routes td{order:2}
+  table.routes td:nth-child(1){order:0}
+  table.routes td:nth-child(9){order:1;grid-column:1/-1;font-size:18px}
+}
 </style>
 </head>
 <body>
@@ -122,8 +141,8 @@ function renderRoutes() {
   routes.sort((x, y) => y[sort] - x[sort]);
   if (AGE_SORT) routes.sort((x, y) => ageCmp(x.age, y.age));
   if (!routes.length) return msg('No hay rutas con estos filtros. Prueba a cambiar de sistema o a subir tu capital.');
-  $('out').innerHTML = '<table><thead><tr><th>Mercancía</th><th>Comprar en (más barato)</th><th>Stock</th><th>Vender en (más caro)</th><th>Demanda</th><th>SCU a cargar</th><th>Por SCU</th><th>Margen %</th><th>Total</th><th>' + ageHead() + '</th></tr></thead><tbody>' +
-    routes.slice(0, 100).map(r => '<tr><td><b>' + esc(r.name) + '</b></td><td>' + where(r.b) + '<div class="n m">' + fmt(r.b.price) + ' /SCU</div></td><td class="n">' + (r.b.scu == null ? '?' : fmt(r.b.scu)) + '</td><td>' + where(r.s) + '<div class="n m">' + fmt(r.s.price) + ' /SCU</div></td><td class="n">' + (r.s.demand == null ? '?' : fmt(r.s.demand)) + '</td><td class="n">' + fmt(r.scu) + '</td><td class="n g">+ ' + fmt(r.per) + '</td><td class="n g">' + r.pct.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' %</td><td class="n g"><b>' + fmt(r.total) + '</b></td><td>' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
+  $('out').innerHTML = '<div class="mobbar">Ordenar por: ' + ageHead() + '</div><table class="cards routes"><thead><tr><th>Mercancía</th><th>Comprar en (más barato)</th><th>Stock</th><th>Vender en (más caro)</th><th>Demanda</th><th>SCU a cargar</th><th>Por SCU</th><th>Margen %</th><th>Total</th><th>' + ageHead() + '</th></tr></thead><tbody>' +
+    routes.slice(0, 100).map(r => '<tr><td class="full nolabel" data-label="Mercancía"><b>' + esc(r.name) + '</b></td><td data-label="Comprar en">' + where(r.b) + '<div class="n m">' + fmt(r.b.price) + ' /SCU</div></td><td class="n" data-label="Stock">' + (r.b.scu == null ? '?' : fmt(r.b.scu)) + '</td><td data-label="Vender en">' + where(r.s) + '<div class="n m">' + fmt(r.s.price) + ' /SCU</div></td><td class="n" data-label="Demanda">' + (r.s.demand == null ? '?' : fmt(r.s.demand)) + '</td><td class="n" data-label="SCU a cargar">' + fmt(r.scu) + '</td><td class="n g" data-label="Por SCU">+ ' + fmt(r.per) + '</td><td class="n g" data-label="Margen %">' + r.pct.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' %</td><td class="n g" data-label="Total"><b>' + fmt(r.total) + '</b></td><td data-label="Dato">' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
 }
 
 function renderList() {
@@ -141,8 +160,8 @@ function renderList() {
   rows.sort((x, y) => sort === 'total' ? y.total - x.total : sort === 'stock' ? (y.lim || 0) - (x.lim || 0) : sell ? y.e.price - x.e.price : x.e.price - y.e.price);
   if (AGE_SORT) rows.sort((x, y) => ageCmp(x.age, y.age));
   if (!rows.length) return msg('No hay datos de ' + esc(c.name) + ' con estos filtros. Prueba a cambiar de sistema.');
-  $('out').innerHTML = '<table><thead><tr><th>Terminal</th><th>Precio /SCU</th><th>' + (sell ? 'Demanda' : 'Stock') + '</th><th>' + (sell ? 'Puedes vender' : 'Puedes comprar') + '</th><th>' + (sell ? 'Ingreso' : 'Coste') + '</th><th>' + ageHead() + '</th></tr></thead><tbody>' +
-    rows.slice(0, 60).map(r => '<tr><td>' + where(r.e) + '</td><td class="n ' + (sell ? 'g' : '') + '"><b>' + fmt(r.e.price) + '</b></td><td class="n">' + (r.lim == null ? '?' : fmt(r.lim)) + '</td><td class="n">' + fmt(r.n) + (qty && r.n < qty ? '<div class="note">solo ' + fmt(r.n) + ' de ' + fmt(qty) + '</div>' : '') + '</td><td class="n">' + (r.n ? fmt(r.total) : '—') + '</td><td>' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
+  $('out').innerHTML = '<div class="mobbar">Ordenar por: ' + ageHead() + '</div><table class="cards"><thead><tr><th>Terminal</th><th>Precio /SCU</th><th>' + (sell ? 'Demanda' : 'Stock') + '</th><th>' + (sell ? 'Puedes vender' : 'Puedes comprar') + '</th><th>' + (sell ? 'Ingreso' : 'Coste') + '</th><th>' + ageHead() + '</th></tr></thead><tbody>' +
+    rows.slice(0, 60).map(r => '<tr><td class="full nolabel" data-label="Terminal">' + where(r.e) + '</td><td class="n ' + (sell ? 'g' : '') + '" data-label="Precio /SCU"><b>' + fmt(r.e.price) + '</b></td><td class="n" data-label="' + (sell ? 'Demanda' : 'Stock') + '">' + (r.lim == null ? '?' : fmt(r.lim)) + '</td><td class="n" data-label="' + (sell ? 'Puedes vender' : 'Puedes comprar') + '">' + fmt(r.n) + (qty && r.n < qty ? '<div class="note">solo ' + fmt(r.n) + ' de ' + fmt(qty) + '</div>' : '') + '</td><td class="n" data-label="' + (sell ? 'Ingreso' : 'Coste') + '">' + (r.n ? fmt(r.total) : '—') + '</td><td data-label="Dato">' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
 }
 
 function render() {
