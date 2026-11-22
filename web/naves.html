@@ -93,6 +93,31 @@ select.cs{height:40px;font-size:13px;max-width:360px;width:100%}
 .nmcell{display:flex;align-items:center;gap:10px}
 .fl{font:11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
 
+.wrap{max-width:1560px}
+.dash{display:grid;gap:16px;align-items:start;grid-template-columns:1fr}
+.dash .col{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media(max-width:899px){.dash .col.buy{order:-1}}
+@media(min-width:900px){.dash{grid-template-columns:1fr 1fr}}
+@media(min-width:1350px){.dash{grid-template-columns:minmax(270px,.85fr) minmax(0,1.5fr) minmax(280px,.9fr) minmax(270px,.85fr)}}
+.slotgrid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.body .scroll td,.body .scroll th{padding:9px 6px}
+@media(max-width:760px){#cfg-sum .tile{flex:1 1 28%;padding:8px}#cfg-sum .tile b{font-size:17px}}
+.body .scroll th{letter-spacing:.04em}
+table.cardsall{min-width:0!important;width:100%}
+table.cardsall thead{display:none}
+table.cardsall tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:12px 14px;border-bottom:1px solid var(--line)}
+table.cardsall td{display:block;padding:0;border:0;white-space:normal}
+table.cardsall td::before{content:attr(data-label);display:block;font:10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
+table.cardsall td.full{grid-column:1/-1}
+table.cardsall td.nolabel::before{display:none}
+table.cardsall td.nolabel{font-size:15px}
+table.cardsall tr:first-child td{background:none}
+table.cardsall tbody tr:first-child{background:rgba(63,214,232,.08)}
+.slot{flex-wrap:wrap}
+.slot .mid{flex:1 1 calc(100% - 56px)}
+.slot .val{order:3;flex:1 1 auto;text-align:left;display:flex;align-items:baseline;gap:8px}
+.slot .val b{display:inline}
+.slot .ab2{order:4;margin-left:auto}
 /* ---- móvil: las tablas pasan a tarjetas para ver los datos clave sin deslizar ---- */
 .mobbar{display:none}
 @media(max-width:760px){
@@ -180,7 +205,7 @@ function msg(t) { $('out').innerHTML = '<p class="empty">' + t + '</p>'; }
 function table(list, what) {
   const rows = list.filter(sysOk);
   if (!rows.length) return '<p class="empty">' + what + '</p>';
-  return '<div class="scroll"><table class="cards" style="min-width:560px"><thead><tr><th>Terminal</th><th>Lugar</th><th>Precio (aUEC)</th><th>Dato</th></tr></thead><tbody>' +
+  return '<div class="scroll"><table class="cards cardsall" style="min-width:560px"><thead><tr><th>Terminal</th><th>Lugar</th><th>Precio (aUEC)</th><th>Dato</th></tr></thead><tbody>' +
     rows.map(e => '<tr><td class="full nolabel" data-label="Terminal"><b>' + esc(e.terminal) + '</b><div class="m sm">' + esc([e.place, e.system].filter(Boolean).join(' · ')) + '</div></td><td class="n g" data-label="Precio (aUEC)"><b>' + fmt(e.price) + '</b></td><td data-label="Dato">' + dot(ageOf(e)) + '</td></tr>').join('') + '</tbody></table></div>';
 }
 
@@ -283,20 +308,22 @@ function slotCard(d, i) {
   return '<div class="slot' + (ch ? ' chg' : '') + '"><div class="sz">' + size + '</div><div class="mid"><div class="nm">' + esc(x.name) + tag + '</div><div class="m sm">' + ln[0] + '</div><div class="m sm">' + ln[1] + '</div>' +
     (ch ? '<div class="sm" style="color:var(--am)">Antes: ' + esc(stock.name) + ' · ' + rowNote(s, uuid) + '</div>' : '') + '</div><div class="val"><b>' + bigVal(s.type, x) + '</b><span>' + UNIT[s.type] + '</span>' + chip + '</div><button class="ab2" data-swap="' + i + '">Cambiar</button></div>';
 }
-function cfgInner(d) {
-  const cats = CAT_ORDER.map(c => {
-    const idx = d.slots.map((s, i) => i).filter(i => d.slots[i].type === c[0]);
-    return idx.length ? '<div class="catt">' + c[1] + ' <span class="m">(' + idx.length + ')</span></div><div class="slotgrid">' + idx.map(i => slotCard(d, i)).join('') + '</div>' : '';
-  }).join('');
-  return '<div class="sec" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><h2>Configurador de componentes</h2><button class="back" data-reset="1" style="margin-left:auto">Restaurar todo de serie</button></div>' +
-    '<div class="body"><div id="sum">' + sumHtml(d) + '</div>' + cats +
-    '<p class="m" style="margin:16px 0 0;font-size:13px">Solo se ofrecen piezas compatibles por tamaño. Se recalculan daño, escudo y cuántico; el balance completo de energía y refrigeración no se simula (se muestran los segmentos que genera cada pieza).</p></div>';
+const CAT_TITLE = {WeaponGun: 'Armas', Shield: 'Escudos', PowerPlant: 'Generadores', Cooler: 'Refrigeradores', QuantumDrive: 'Motor cuántico'};
+function cfgAvailable(d) { return (d.slots || []).length && IT && Object.keys(IT.types || {}).length; }
+function catInner(d, t) {
+  const idx = d.slots.map((s, i) => i).filter(i => d.slots[i].type === t);
+  return '<div class="sec"><h2>' + CAT_TITLE[t] + ' <span class="m">(' + idx.length + ')</span></h2></div><div class="body"><div class="slotgrid">' + idx.map(i => slotCard(d, i)).join('') + '</div></div>';
 }
-function cfgHtml(d) {
-  if (!(d.slots || []).length || !IT || !Object.keys(IT.types || {}).length) return '<section class="card"><div class="sec"><h2>Configurador de componentes</h2></div><p class="empty">No está disponible para esta nave.</p></section>';
-  return '<section class="card" id="cfgcard">' + cfgInner(d) + '</section>';
+function catCard(d, t) { return d.slots.some(s => s.type === t) ? '<section class="card" id="cfg-' + t + '">' + catInner(d, t) + '</section>' : ''; }
+function sumCard(d) {
+  return '<div class="sec" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><h2>Resumen con tus cambios</h2><button class="back" data-reset="1" style="margin-left:auto">Restaurar todo de serie</button></div>' +
+    '<div class="body">' + sumHtml(d) + '<p class="m" style="margin:12px 0 0;font-size:13px">Solo se ofrecen piezas compatibles por tamaño. Se recalculan daño, escudo y cuántico; el balance de energía y refrigeración no se simula (se muestran los segmentos que genera cada pieza).</p></div>';
 }
-function cfgRender(d) { const c = $('cfgcard'); if (c) c.innerHTML = cfgInner(d); }
+function cfgRender(d) {
+  const sm = $('cfg-sum');
+  if (sm) sm.innerHTML = sumCard(d);
+  ['WeaponGun', 'Shield', 'PowerPlant', 'Cooler', 'QuantumDrive'].forEach(t => { const c = $('cfg-' + t); if (c) c.innerHTML = catInner(d, t); });
+}
 
 // ---------- Ventana "Cambiar pieza" ----------
 const pcs = v => v == null ? '—' : Math.round(v * 100) + ' %';
@@ -400,9 +427,9 @@ function ensureModal() {
   document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && MOD) closeSwap(); });
 }
 function bindCfg(d) {
-  const card = $('cfgcard');
-  if (!card) return;
-  card.addEventListener('click', ev => {
+  const root = $('stats');
+  if (!root) return;
+  root.addEventListener('click', ev => {
     const b = ev.target.closest('[data-swap]');
     if (b) return openSwap(d, +b.dataset.swap);
     if (ev.target.closest('[data-reset]')) { SEL = {}; cfgRender(d); }
@@ -417,7 +444,7 @@ const tl = (label, val) => '<div class="tile"><b>' + val + '</b><span>' + label 
 const TYPES = [['WeaponGun', 'Armas'], ['Turret', 'Torretas'], ['TurretBase', 'Bases de torreta'], ['MissileLauncher', 'Lanzamisiles'], ['Missile', 'Misiles'], ['WeaponDefensive', 'Contramedidas'], ['Shield', 'Escudos'], ['PowerPlant', 'Generadores'], ['Cooler', 'Refrigeradores'], ['QuantumDrive', 'Motor cuántico'], ['Radar', 'Radar'], ['MainThruster', 'Propulsor principal'], ['ManneuverThruster', 'Propulsores de maniobra'], ['FuelTank', 'Combustible'], ['QuantumFuelTank', 'Combustible cuántico'], ['EMP', 'EMP'], ['QuantumInterdictionGenerator', 'Interdicción'], ['TractorBeam', 'Rayo tractor'], ['SalvageHead', 'Salvamento']];
 function groupW(list) { const m = new Map(); (list || []).forEach(w => { const e = m.get(w.name) || {w, n: 0}; e.n++; m.set(w.name, e); }); return [...m.values()]; }
 
-function statsHtml(d) {
+function statParts(d) {
   const w = d.weapons || {}, sh = d.shield || {}, sp = d.speed || {}, ag = d.agility || {}, q = d.quantum || {}, ins = d.insurance || {}, ar = d.armor || {}, dm = ar.damage || {}, sn = w.snapshot || {};
   const guns = groupW(w.fixed).map(e => kv((e.n > 1 ? e.n + '× ' : '') + esc(e.w.name), n1(e.w.dps) + ' DPS')).join('');
   const misl = w.missiles && w.missiles.count ? kv('Misiles', n1(w.missiles.count) + ' · daño total ' + fmt((w.missiles.damage || {}).total || 0)) : '';
@@ -428,25 +455,42 @@ function statsHtml(d) {
   let last = null;
   const comp = ports.map(p => { const lab = (TYPES.find(x => x[0] === p.type) || [0, p.label || p.type])[1]; const first = lab !== last; last = lab;
     return '<tr' + (first ? ' class="grp"' : '') + '><td>' + (first ? esc(lab) : '') + '</td><td><b>' + esc(p.name) + '</b></td><td class="n">' + (p.size == null ? '—' : 'S' + p.size) + '</td><td class="n">' + esc(p.grade == null ? '—' : p.grade) + '</td><td class="n">' + p.n + '</td><td class="m">' + esc(p.maker || '') + '</td></tr>'; }).join('');
-  return '<div class="stack"><div class="cols">' +
-    '<section class="card"><div class="sec"><h2>Combate</h2></div><div class="body"><div class="tiles">' + tl('DPS', n1(w.dps)) + tl('DPS sostenido', n1(w.sustained)) + tl('Alfa', n1(w.alpha)) + '</div>' + guns + misl + cms + '</div></section>' +
-    '<section class="card"><div class="sec"><h2>Defensa</h2></div><div class="body"><div class="tiles">' + tl('Casco HP', fmt(d.health || 0)) + tl('Escudo HP', fmt(sh.hp || 0)) + tl('Regen. /s', n1(sh.regen)) + tl('Cara', esc(sh.face || '—')) + '</div>' + kv('Blindaje HP', fmt(ar.health || 0)) +
-    '<div class="scroll"><table style="min-width:300px"><thead><tr><th>Daño</th><th>Resistencia</th><th>Absorción</th><th>Blindaje</th></tr></thead><tbody>' + res + '</tbody></table></div></div></section></div>' +
-    '<div class="cols"><section class="card"><div class="sec"><h2>Movimiento</h2></div><div class="body"><div class="tiles">' + tl('SCM m/s', n1(sp.scm)) + tl('Máx. m/s', n1(sp.max)) + tl('0 → SCM (s)', n1(sp.zero_to_scm)) + '</div><div class="tiles">' + tl('Cabeceo °/s', n1(ag.pitch)) + tl('Guiñada °/s', n1(ag.yaw)) + tl('Alabeo °/s', n1(ag.roll)) + '</div></div></section>' +
-    '<section class="card"><div class="sec"><h2>Otros datos</h2></div><div class="body">' + kv('PVP en tienda', d.msrp == null ? '—' : n1(d.msrp) + ' USD') + kv('Combustible (capacidad)', n1(d.fuel)) + kv('Cuántico: velocidad', q.quantum_speed ? n1(q.quantum_speed / 1e6) + ' Mm/s' : '—') + kv('Cuántico: alcance', q.quantum_range ? n1(q.quantum_range / 1e9) + ' Gm' : '—') + kv('Cuántico: carga', q.quantum_spool_time == null ? '—' : n1(q.quantum_spool_time) + ' s') + kv('Firma IR / EM', n1((d.signature || {}).ir_shields) + ' / ' + n1((d.signature || {}).em_shields)) + kv('Seguro: reclamación', ins.claim_time == null ? '—' : n1(ins.claim_time) + ' min') + kv('Seguro: acelerar', ins.expedite_cost == null ? '—' : fmt(ins.expedite_cost) + ' aUEC · ' + n1(ins.expedite_time) + ' min') + '</div></section></div>' +
-    cfgHtml(d) + '<section class="card"><div class="sec"><h2>Otros componentes</h2></div>' + (comp ? '<div class="scroll"><table style="min-width:640px"><thead><tr><th>Tipo</th><th>Componente</th><th>Tamaño</th><th>Grado</th><th>Cant.</th><th>Fabricante</th></tr></thead><tbody>' + comp + '</tbody></table></div>' : '<p class="empty">La wiki no lista componentes para esta nave.</p>') + '</section></div>';
+  return {
+    combat: '<section class="card"><div class="sec"><h2>Combate</h2></div><div class="body"><div class="tiles">' + tl('DPS', n1(w.dps)) + tl('DPS sostenido', n1(w.sustained)) + tl('Alfa', n1(w.alpha)) + '</div>' + guns + misl + cms + '</div></section>',
+    defense: '<section class="card"><div class="sec"><h2>Defensa</h2></div><div class="body"><div class="tiles">' + tl('Casco HP', fmt(d.health || 0)) + tl('Escudo HP', fmt(sh.hp || 0)) + tl('Regen. /s', n1(sh.regen)) + tl('Cara', esc(sh.face || '—')) + '</div>' + kv('Blindaje HP', fmt(ar.health || 0)) +
+      '<div class="scroll"><table style="min-width:300px"><thead><tr><th>Daño</th><th>Resist.</th><th>Absorc.</th><th>Blind.</th></tr></thead><tbody>' + res + '</tbody></table></div></div></section>',
+    move: '<section class="card"><div class="sec"><h2>Movimiento</h2></div><div class="body"><div class="tiles">' + tl('SCM m/s', n1(sp.scm)) + tl('Máx. m/s', n1(sp.max)) + tl('0 → SCM (s)', n1(sp.zero_to_scm)) + '</div><div class="tiles">' + tl('Cabeceo °/s', n1(ag.pitch)) + tl('Guiñada °/s', n1(ag.yaw)) + tl('Alabeo °/s', n1(ag.roll)) + '</div></div></section>',
+    other: '<section class="card"><div class="sec"><h2>Otros datos</h2></div><div class="body">' + kv('PVP en tienda', d.msrp == null ? '—' : n1(d.msrp) + ' USD') + kv('Combustible (capacidad)', n1(d.fuel)) + kv('Cuántico: velocidad', q.quantum_speed ? n1(q.quantum_speed / 1e6) + ' Mm/s' : '—') + kv('Cuántico: alcance', q.quantum_range ? n1(q.quantum_range / 1e9) + ' Gm' : '—') + kv('Cuántico: carga', q.quantum_spool_time == null ? '—' : n1(q.quantum_spool_time) + ' s') + kv('Firma IR / EM', n1((d.signature || {}).ir_shields) + ' / ' + n1((d.signature || {}).em_shields)) + kv('Seguro: reclamación', ins.claim_time == null ? '—' : n1(ins.claim_time) + ' min') + kv('Seguro: acelerar', ins.expedite_cost == null ? '—' : fmt(ins.expedite_cost) + ' aUEC · ' + n1(ins.expedite_time) + ' min') + '</div></section>',
+    comps: comp ? '<section class="card"><div class="sec"><h2>Otros componentes</h2></div><div class="scroll"><table style="min-width:460px"><thead><tr><th>Tipo</th><th>Componente</th><th>Tam.</th><th>Grado</th><th>Cant.</th><th>Fabricante</th></tr></thead><tbody>' + comp + '</tbody></table></div></section>' : ''
+  };
+}
+
+function buyRent(s) {
+  return '<section class="card"><div class="sec"><h2>Dónde comprarla</h2></div>' + table(s.buy, 'No hay datos de compra por aUEC en este filtro. Puede que solo se venda con dinero real.') + '</section>' +
+    '<section class="card"><div class="sec"><h2>Dónde alquilarla</h2></div>' + table(s.rent, 'No hay datos de alquiler en este filtro.') + '</section>';
+}
+
+// Distribución en columnas, como una calculadora: datos de la nave | armas y otros | escudos, energía, refrigeración y cuántico | dónde conseguirla
+function dash(d, s) {
+  const P = statParts(d), cfg = cfgAvailable(d);
+  const warn = s.wid_approx ? '<p class="warn" style="margin:0">Esta edición no figura aparte en la wiki: se muestran las estadísticas y componentes del modelo base.</p>' : '';
+  const mid = (cfg ? catCard(d, 'WeaponGun') : '<section class="card"><div class="sec"><h2>Configurador de componentes</h2></div><p class="empty">No está disponible para esta nave.</p></section>') + P.comps;
+  const right = cfg ? ['Shield', 'PowerPlant', 'Cooler', 'QuantumDrive'].map(x => catCard(d, x)).join('') : '';
+  return '<div class="stack">' + warn + (cfg ? '<section class="card" id="cfg-sum">' + sumCard(d) + '</section>' : '') +
+    '<div class="dash"><div class="col">' + P.combat + P.defense + P.move + P.other + '</div><div class="col wide">' + mid + '</div><div class="col">' + right + '</div><div class="col buy">' + buyRent(s) + '</div></div></div>';
 }
 
 async function fillStats(s) {
   const token = ++STATS_TOKEN;
   const put = h => { if (token === STATS_TOKEN && $('stats')) $('stats').innerHTML = h; };
+  const plain = msg => '<div class="stack">' + buyRent(s) + '<p class="empty">' + msg + '</p></div>';
   try {
     const sd = await loadSD();
     const d = s.wid && sd.ships[s.wid];
     SEL = {};
-    put(d ? (s.wid_approx ? '<p class="warn" style="margin:0 0 14px">Esta edición no figura aparte en la wiki: se muestran las estadísticas y componentes del modelo base.</p>' : '') + statsHtml(d) : '<p class="empty">No hay estadísticas detalladas de esta nave en la wiki.</p>');
+    put(d ? dash(d, s) : plain('No hay estadísticas detalladas de esta nave en la wiki.'));
     if (d && token === STATS_TOKEN) bindCfg(d);
-  } catch (e) { put('<p class="empty">No se pudieron cargar las estadísticas.</p>'); }
+  } catch (e) { put(plain('No se pudieron cargar las estadísticas.')); }
 }
 
 function renderDetail(s) {
@@ -459,8 +503,7 @@ function renderDetail(s) {
     '<div class="chips">' + (s.tags || []).map(t => '<span class="chip">' + esc(t) + '</span>').join('') + '</div>' +
     '<div class="tiles">' + tile('SCU', s.scu == null ? '—' : fmt(s.scu)) + tile('Tripulación', s.crew || '—') + tile('Masa (kg)', s.mass ? fmt(s.mass) : '—') + tile('Dimensiones (m)', dims.length ? dims.join(' × ') : '—') + tile('Plataforma', s.pad || '—') + '</div>' +
     (s.store ? '<p style="margin:14px 0 0"><a href="' + esc(s.store) + '" target="_blank" rel="noopener">Ficha en la tienda de RSI ↗</a></p>' : '') + '</div></section>' +
-    '<section class="card"><div class="sec"><h2>Dónde comprarla</h2></div>' + table(s.buy, 'No hay datos de compra por aUEC en este filtro. Puede que solo se venda con dinero real.') + '</section>' +
-    '<section class="card"><div class="sec"><h2>Dónde alquilarla</h2></div>' + table(s.rent, 'No hay datos de alquiler en este filtro.') + '</section><div id="stats"><p class="empty">Cargando estadísticas…</p></div></div>';
+    '<div id="stats"><div class="stack">' + buyRent(s) + '<p class="empty">Cargando estadísticas…</p></div></div></div>';
   fillStats(s);
   $('back').addEventListener('click', () => { $('q').value = ''; render(); window.scrollTo(0, 0); });
 }
