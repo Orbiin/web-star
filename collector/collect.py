@@ -325,16 +325,38 @@ def compact_ship(w, seen):
             "cool_gen": (w.get("cooling") or {}).get("generation_segments")}
 
 
+def unexpanded(ports):
+    """True si algun montaje (torreta, soporte de arma, rack) llega SIN sus hijos: asi llegan las naves
+    en la lista de la wiki, y entonces faltan las armas y los misiles."""
+    for p in ports or []:
+        t = (p.get("equipped_item") or {}).get("type")
+        if t in ("Turret", "TurretBase", "MissileLauncher") and not p.get("ports"):
+            return True
+        if unexpanded(p.get("ports")):
+            return True
+    return False
+
+
 def wiki_ships():
-    """Descarga todas las naves de la wiki (11 paginas aprox.). Devuelve ({uuid: ficha}, diagnostico)."""
-    by_uuid, seen, page, last, failed = {}, {}, 1, 1, 0
+    """Descarga todas las naves de la wiki (11 paginas aprox.).
+    Devuelve ({uuid: ficha}, {uuid de las que necesitan pedir su ficha completa}, diagnostico)."""
+    by_uuid, need, seen, page, last, failed, inc = {}, set(), {}, 1, 1, 0, "&include=ports"
     while page <= min(last, 25):
         try:
-            body = wiki_get("vehicles?page%5Bnumber%5D=" + str(page))
+            try:
+                body = wiki_get("vehicles?page%5Bnumber%5D=" + str(page) + inc)
+            except Exception:
+                if page != 1 or not inc:
+                    raise
+                inc = ""                      # la lista no admite include: se repite sin el
+                body = wiki_get("vehicles?page%5Bnumber%5D=1")
             last = (body.get("meta") or {}).get("last_page", 1)
             for w in body.get("data", []):
-                if w.get("uuid"):
-                    by_uuid[w["uuid"]] = compact_ship(w, seen)
+                u = w.get("uuid")
+                if u:
+                    by_uuid[u] = compact_ship(w, seen)
+                    if unexpanded(w.get("ports")):
+                        need.add(u)
         except Exception as e:
             failed += 1
             print(f"Wiki pagina {page} fallida: {e}", file=sys.stderr)
@@ -343,7 +365,23 @@ def wiki_ships():
     if not by_uuid or failed > max(2, last // 2):
         raise RuntimeError(f"Wiki incompleta: {len(by_uuid)} naves, {failed} paginas fallidas")
     top = dict(sorted(seen.items(), key=lambda kv: -kv[1])[:40])
-    return by_uuid, {"wiki_ships": len(by_uuid), "pages_failed": failed, "port_types": top}
+    return by_uuid, need, {"wiki_ships": len(by_uuid), "pages_failed": failed, "list_include_ports": bool(inc),
+                           "needs_detail": len(need), "port_types": top}
+
+
+def wiki_details(by_uuid, uuids, diag):
+    """Pide la ficha completa (con los puertos anidados) de las naves cuya lista llego sin ellos."""
+    done = failed = 0
+    for u in sorted(uuids):
+        try:
+            body = wiki_get("vehicles/" + u + "?include=ports")
+            by_uuid[u] = compact_ship(body.get("data", body), {})
+            done += 1
+        except Exception as e:
+            failed += 1
+            print(f"Wiki ficha {u} fallida: {e}", file=sys.stderr)
+        time.sleep(1.2)
+    diag.update(details_fetched=done, details_failed=failed)
 
 
 def wiki_items():
@@ -463,40 +501,57 @@ def prev_json(name):
         return None
 
 
+SCHEMA = 3     # sube si cambia el formato de shipdata/items: fuerza una descarga nueva de la wiki
+
+
 def static_data(live, now, where):
-    """Naves (UEX) y sus fichas (wiki): solo cambian con un parche, asi que solo se piden cuando toca.
-    Devuelve (ships_json, detalle_json, catalogo_json, state, razon). Si no toca refrescar, reutiliza lo ya publicado."""
+    """Naves (UEX) y fichas de la wiki: solo cambian con un parche, asi que solo se piden cuando toca.
+    UEX se refresca ademas cada 6 h durante 3 dias tras un parche; la wiki (mucho mas pesada) solo con el parche.
+    Devuelve (ships_json, detalle_json, catalogo_json, state, razon)."""
     state, old_ships, old_detail, old_items = (prev_json("static.json"), prev_json("ships.json"),
                                                 prev_json("shipdata.json"), prev_json("items.json"))
+    have_all = bool(state and old_ships and old_detail and old_items)
     changed = bool(live) and (not state or state.get("version") != live)
     first_seen = now if (changed or not state) else state.get("first_seen", now)
     last = (state or {}).get("fetched_at", 0)
     window = now - first_seen < REFRESH_WINDOW_D * 86400 and now - last > REFRESH_EVERY_H * 3600
-    reason = ("forzado a mano" if FORCE else "sin datos previos" if not (state and old_ships and old_detail and old_items) else
-              "parche nuevo" if changed else "refresco tras parche" if window else None)
+    old_format = have_all and state.get("schema") != SCHEMA
+    reason = ("forzado a mano" if FORCE else "sin datos previos" if not have_all else
+              "formato nuevo" if old_format else "parche nuevo" if changed else
+              "refresco tras parche" if window else None)
+    wiki_due = bool(FORCE or not have_all or old_format or changed)
     if reason:
         try:
             raw, diag = ships(where)
-            try:
-                by_uuid, wdiag = wiki_ships()
-            except Exception as e:                       # sin la wiki, las naves siguen funcionando con UEX
-                print("Wiki no disponible:", e, file=sys.stderr)
-                by_uuid, wdiag = {}, {"error": str(e)}
-            matched, approx, mdiag = match_ships(raw["vehicles"], by_uuid)
-            diag["wiki"] = dict(wdiag, **mdiag)
-            try:
-                catalog, idiag = wiki_items() if by_uuid else ({}, {"error": "sin wiki"})
-            except Exception as e:
-                print("Catalogo de piezas no disponible:", e, file=sys.stderr)
-                catalog, idiag = {}, {"error": str(e)}
-            diag["items"] = idiag
+            if wiki_due:
+                try:
+                    by_uuid, need, wdiag = wiki_ships()
+                except Exception as e:                       # sin la wiki, las naves siguen funcionando con UEX
+                    print("Wiki no disponible:", e, file=sys.stderr)
+                    by_uuid, need, wdiag = {}, set(), {"error": str(e)}
+                matched, approx, mdiag = match_ships(raw["vehicles"], by_uuid)
+                if by_uuid:
+                    wiki_details(by_uuid, need & set(matched.values()), wdiag)
+                try:
+                    catalog, idiag = wiki_items() if by_uuid else ({}, {"error": "sin wiki"})
+                except Exception as e:
+                    print("Catalogo de piezas no disponible:", e, file=sys.stderr)
+                    catalog, idiag = {}, {"error": str(e)}
+                detail = {"generated_at": iso(now), "ships": {u: by_uuid[u] for u in set(matched.values())}}
+                items = {"generated_at": iso(now), "types": catalog}
+            else:                                            # solo UEX: se reutiliza lo ya descargado de la wiki
+                by_uuid, wdiag = old_detail.get("ships", {}), {"reused": True}
+                matched, approx, mdiag = match_ships(raw["vehicles"], by_uuid)
+                detail, items = old_detail, old_items
+                idiag = (state.get("diag") or {}).get("items")
+            diag["wiki"], diag["items"] = dict(wdiag, **mdiag), idiag
             ship_data = normalize_ships(raw, where, now, lambda v: matched.get(v.get("id")), approx)
-            detail = {"generated_at": iso(now), "ships": {u: by_uuid[u] for u in set(matched.values())}}
-            items = {"generated_at": iso(now), "types": catalog}
-            return ship_data, detail, items, {"version": live, "first_seen": first_seen, "fetched_at": now, "diag": diag}, reason
+            wiki_time = now if wiki_due else state.get("wiki_fetched_at", now)
+            return ship_data, detail, items, {"version": live, "first_seen": first_seen, "fetched_at": now,
+                                              "wiki_fetched_at": wiki_time, "schema": SCHEMA, "diag": diag}, reason
         except (SystemExit, Exception) as e:
             print("No se pudieron refrescar las naves:", e, file=sys.stderr)
-            if not (state and old_ships and old_detail):
+            if not have_all:
                 return {"generated_at": None, "ships": []}, {"ships": {}}, {"types": {}}, {"version": live}, "error"
     return old_ships, old_detail, old_items, state, None
 
