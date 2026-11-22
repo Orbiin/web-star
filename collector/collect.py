@@ -227,17 +227,30 @@ TURRET_BASES = {"TurretBase", "UtilityTurret"}                                 #
 
 def item_stats(it, t):
     """Estadisticas utiles de una pieza (las mismas para la instalada y para el catalogo)."""
+    em, rn = it.get("emission") or {}, it.get("resource_network") or {}
     d = {"uuid": it.get("uuid"), "name": it.get("name"), "size": it.get("size"), "grade": it.get("grade"),
-         "class": it.get("class"), "maker": (it.get("manufacturer") or {}).get("name")}
+         "class": it.get("class"), "maker": (it.get("manufacturer") or {}).get("name"),
+         "em": em.get("em_max"), "ir": em.get("ir"), "dur": (it.get("durability") or {}).get("health"),
+         "pwr": (((rn.get("usage") or {}).get("power")) or {}).get("max")}
     if t == "WeaponGun":
         v = it.get("vehicle_weapon") or {}
         dm, modes = v.get("damage") or {}, v.get("modes") or []
+        kind, dd = v.get("type") or "", dm.get("dps") or {}
+        low = kind.lower()
+        top = max(("energy", "physical", "distortion"), key=lambda k: dd.get(k) or 0)
         d.update(dps=dm.get("burst") or (modes[0].get("damage_per_second") if modes else None),
                  sustained=dm.get("sustained_60s"), alpha=dm.get("alpha_total"), range=v.get("range"),
-                 rpm=v.get("rpm"), kind=v.get("type"))
+                 rpm=v.get("rpm"), kind=kind, speed=(v.get("ammunition") or {}).get("speed"),
+                 spread=(v.get("spread") or {}).get("max"), ammo=v.get("capacity"),
+                 wtype=next((n for k, n in (("repeater", "Repeater"), ("cannon", "Cannon"), ("gatling", "Gatling"),
+                                            ("scattergun", "Scattergun")) if k in low), "Otra"),
+                 dmg=({"energy": "energy", "physical": "ballistic", "distortion": "distortion"}[top]
+                      if (dd.get(top) or 0) > 0 else None))
     elif t == "Shield":
         sh = it.get("shield") or {}
-        d.update(hp=sh.get("max_health"), regen=sh.get("regen_rate"))
+        pick3 = lambda m: [((m or {}).get(k) or {}).get("max") for k in ("physical", "energy", "distortion")]
+        d.update(hp=sh.get("max_health"), regen=sh.get("regen_rate"), res=pick3(sh.get("resistance")),
+                 ab=pick3(sh.get("absorption")))
     elif t == "PowerPlant":
         d["seg"] = (it.get("power_plant") or {}).get("power_segment_generation")
     elif t == "Cooler":
