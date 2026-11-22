@@ -92,6 +92,47 @@ select.cs{height:40px;font-size:13px;max-width:360px;width:100%}
 .chipf.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.14)}
 .nmcell{display:flex;align-items:center;gap:10px}
 .fl{font:11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+
+/* ---- móvil: las tablas pasan a tarjetas para ver los datos clave sin deslizar ---- */
+.mobbar{display:none}
+@media(max-width:760px){
+  .mobbar{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--mut);font-size:13px}
+  table.cards{min-width:0!important;width:100%}
+  table.cards thead{display:none}
+  table.cards tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  table.cards td{display:block;padding:0;border:0;white-space:normal}
+  table.cards td::before{content:attr(data-label);display:block;font:10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
+  table.cards td.full{grid-column:1/-1}
+  table.cards td.nolabel::before{display:none}
+  table.cards td.nolabel{font-size:16px}
+  table.cards tr:first-child td{background:none}
+  table.cards tbody tr:first-child{background:rgba(63,214,232,.08)}
+  table.routes td{order:2}
+  table.routes td:nth-child(1){order:0}
+  table.routes td:nth-child(9){order:1;grid-column:1/-1;font-size:18px}
+}
+
+@media(max-width:760px){
+  /* tarjetas de huecos: nombre arriba, cifra y botón debajo */
+  .slot{flex-wrap:wrap}
+  .slot .mid{flex:1 1 calc(100% - 56px)}
+  .slot .val{order:3;flex:1 1 auto;text-align:left;display:flex;align-items:baseline;gap:8px}
+  .slot .val b{display:inline}
+  .slot .ab2{order:4;margin-left:auto}
+  .slotgrid{grid-template-columns:1fr}
+  /* ventana de cambiar pieza a pantalla completa */
+  .modal{padding:0}
+  .mbox{max-height:100dvh;height:100dvh;border-radius:0;width:100%}
+  .mtools{gap:10px;padding:10px 12px}
+  .mtools>div{width:100%}
+  .mtools>div:not(:first-child){display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;align-items:center}
+  .mtools>div:not(:first-child) .fl{margin:0 4px 0 0;white-space:nowrap}
+  .chipf{white-space:nowrap;min-height:38px}
+  #sw-q{width:100%!important}
+  .mscroll th:first-child,.mscroll td:first-child{position:sticky;left:0;background:#0d1822;z-index:2;min-width:190px}
+  .mscroll th:first-child{z-index:3}
+  .body .scroll table{font-size:13px}
+}
 </style>
 </head>
 <body>
@@ -139,8 +180,8 @@ function msg(t) { $('out').innerHTML = '<p class="empty">' + t + '</p>'; }
 function table(list, what) {
   const rows = list.filter(sysOk);
   if (!rows.length) return '<p class="empty">' + what + '</p>';
-  return '<div class="scroll"><table style="min-width:560px"><thead><tr><th>Terminal</th><th>Lugar</th><th>Precio (aUEC)</th><th>Dato</th></tr></thead><tbody>' +
-    rows.map(e => '<tr><td><b>' + esc(e.terminal) + '</b></td><td>' + esc([e.place, e.system].filter(Boolean).join(' · ')) + '</td><td class="n g"><b>' + fmt(e.price) + '</b></td><td>' + dot(ageOf(e)) + '</td></tr>').join('') + '</tbody></table></div>';
+  return '<div class="scroll"><table class="cards" style="min-width:560px"><thead><tr><th>Terminal</th><th>Lugar</th><th>Precio (aUEC)</th><th>Dato</th></tr></thead><tbody>' +
+    rows.map(e => '<tr><td class="full nolabel" data-label="Terminal"><b>' + esc(e.terminal) + '</b><div class="m sm">' + esc([e.place, e.system].filter(Boolean).join(' · ')) + '</div></td><td class="n g" data-label="Precio (aUEC)"><b>' + fmt(e.price) + '</b></td><td data-label="Dato">' + dot(ageOf(e)) + '</td></tr>').join('') + '</tbody></table></div>';
 }
 
 let SD = null, STATS_TOKEN = 0;
@@ -329,7 +370,7 @@ function openSwap(d, i) {
   swapRefresh(true);
   $('swap').hidden = false;
   document.body.style.overflow = 'hidden';
-  $('sw-q').focus();
+  if (!matchMedia('(pointer:coarse)').matches) $('sw-q').focus();
 }
 function closeSwap() { if ($('swap')) { $('swap').hidden = true; document.body.style.overflow = ''; } MOD = null; }
 function applyPick(uuid) {
@@ -390,7 +431,7 @@ function statsHtml(d) {
   return '<div class="stack"><div class="cols">' +
     '<section class="card"><div class="sec"><h2>Combate</h2></div><div class="body"><div class="tiles">' + tl('DPS', n1(w.dps)) + tl('DPS sostenido', n1(w.sustained)) + tl('Alfa', n1(w.alpha)) + '</div>' + guns + misl + cms + '</div></section>' +
     '<section class="card"><div class="sec"><h2>Defensa</h2></div><div class="body"><div class="tiles">' + tl('Casco HP', fmt(d.health || 0)) + tl('Escudo HP', fmt(sh.hp || 0)) + tl('Regen. /s', n1(sh.regen)) + tl('Cara', esc(sh.face || '—')) + '</div>' + kv('Blindaje HP', fmt(ar.health || 0)) +
-    '<div class="scroll"><table style="min-width:420px"><thead><tr><th>Daño</th><th>Resistencia</th><th>Absorción</th><th>Blindaje</th></tr></thead><tbody>' + res + '</tbody></table></div></div></section></div>' +
+    '<div class="scroll"><table style="min-width:300px"><thead><tr><th>Daño</th><th>Resistencia</th><th>Absorción</th><th>Blindaje</th></tr></thead><tbody>' + res + '</tbody></table></div></div></section></div>' +
     '<div class="cols"><section class="card"><div class="sec"><h2>Movimiento</h2></div><div class="body"><div class="tiles">' + tl('SCM m/s', n1(sp.scm)) + tl('Máx. m/s', n1(sp.max)) + tl('0 → SCM (s)', n1(sp.zero_to_scm)) + '</div><div class="tiles">' + tl('Cabeceo °/s', n1(ag.pitch)) + tl('Guiñada °/s', n1(ag.yaw)) + tl('Alabeo °/s', n1(ag.roll)) + '</div></div></section>' +
     '<section class="card"><div class="sec"><h2>Otros datos</h2></div><div class="body">' + kv('PVP en tienda', d.msrp == null ? '—' : n1(d.msrp) + ' USD') + kv('Combustible (capacidad)', n1(d.fuel)) + kv('Cuántico: velocidad', q.quantum_speed ? n1(q.quantum_speed / 1e6) + ' Mm/s' : '—') + kv('Cuántico: alcance', q.quantum_range ? n1(q.quantum_range / 1e9) + ' Gm' : '—') + kv('Cuántico: carga', q.quantum_spool_time == null ? '—' : n1(q.quantum_spool_time) + ' s') + kv('Firma IR / EM', n1((d.signature || {}).ir_shields) + ' / ' + n1((d.signature || {}).em_shields)) + kv('Seguro: reclamación', ins.claim_time == null ? '—' : n1(ins.claim_time) + ' min') + kv('Seguro: acelerar', ins.expedite_cost == null ? '—' : fmt(ins.expedite_cost) + ' aUEC · ' + n1(ins.expedite_time) + ' min') + '</div></section></div>' +
     cfgHtml(d) + '<section class="card"><div class="sec"><h2>Otros componentes</h2></div>' + (comp ? '<div class="scroll"><table style="min-width:640px"><thead><tr><th>Tipo</th><th>Componente</th><th>Tamaño</th><th>Grado</th><th>Cant.</th><th>Fabricante</th></tr></thead><tbody>' + comp + '</tbody></table></div>' : '<p class="empty">La wiki no lista componentes para esta nave.</p>') + '</section></div>';
@@ -432,8 +473,8 @@ function renderList() {
   if (sort === 'buy' || sort === 'rent') rows.sort((x, y) => key[sort](x) - key[sort](y));
   else if (sort === 'scu') rows.sort((x, y) => (y.s.scu || 0) - (x.s.scu || 0));
   if (!rows.length) return msg('No hay naves con estos filtros.');
-  $('out').innerHTML = '<section class="card"><div class="scroll"><table style="min-width:860px"><thead><tr><th>Nave</th><th>Fabricante</th><th>SCU</th><th>Tripulación</th><th>Tipo</th><th>Compra desde</th><th>Alquiler desde</th></tr></thead><tbody>' +
-    rows.slice(0, 300).map(x => '<tr><td><button class="lk" data-pick="' + esc(x.s.full || x.s.name) + '">' + esc(x.s.full || x.s.name) + '</button></td><td>' + esc(x.s.maker || '') + '</td><td class="n">' + (x.s.scu == null ? '—' : fmt(x.s.scu)) + '</td><td class="n">' + esc(x.s.crew || '—') + '</td><td class="m">' + esc((x.s.tags || []).slice(0, 3).join(', ')) + '</td><td>' + priceCell(x.b) + '</td><td>' + priceCell(x.r) + '</td></tr>').join('') + '</tbody></table></div></section>';
+  $('out').innerHTML = '<section class="card"><div class="scroll"><table class="cards" style="min-width:860px"><thead><tr><th>Nave</th><th>Fabricante</th><th>SCU</th><th>Tripulación</th><th>Tipo</th><th>Compra desde</th><th>Alquiler desde</th></tr></thead><tbody>' +
+    rows.slice(0, 300).map(x => '<tr><td class="full nolabel" data-label="Nave"><button class="lk" data-pick="' + esc(x.s.full || x.s.name) + '">' + esc(x.s.full || x.s.name) + '</button><div class="m sm">' + esc(x.s.maker || '') + '</div></td><td class="n" data-label="SCU">' + (x.s.scu == null ? '—' : fmt(x.s.scu)) + '</td><td class="n" data-label="Tripulación">' + esc(x.s.crew || '—') + '</td><td class="m full" data-label="Tipo">' + esc((x.s.tags || []).slice(0, 3).join(', ')) + '</td><td data-label="Compra desde">' + priceCell(x.b) + '</td><td data-label="Alquiler desde">' + priceCell(x.r) + '</td></tr>').join('') + '</tbody></table></div></section>'; 
 }
 
 function render() {
