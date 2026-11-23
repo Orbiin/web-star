@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>SC HUB · Comercio</title>
+<title>SC HUB · Inicio</title>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#060b11;--panel:#0f1b25;--line:#1a3544;--txt:#d6e4ee;--mut:#8aa0b2;--cy:#3fd6e8;--gr:#4fd68a;--am:#ffb43a;--rd:#ff6b5e}
@@ -60,136 +60,197 @@ a{color:var(--cy)}
   table.routes td:nth-child(1){order:0}
   table.routes td:nth-child(9){order:1;grid-column:1/-1;font-size:18px}
 }
+
+.wrap{max-width:1380px}
+.ac-b{--ac:#4fd68a;--acr:79,214,138}.ac-e{--ac:#b6e03a;--acr:182,224,58}.ac-s{--ac:#3fd6e8;--acr:63,214,232}.ac-k{--ac:#ffb43a;--acr:255,180,58}.ac-q{--ac:#b28cff;--acr:178,140,255}.ac-w{--ac:#ff9f43;--acr:255,159,67}
+.card[class*="ac-"]{background:linear-gradient(180deg,rgba(var(--acr),.10),rgba(var(--acr),.02) 40%,#0a131b);border-color:rgba(var(--acr),.38);box-shadow:inset 0 2px 0 var(--ac),0 8px 30px rgba(0,0,0,.35)}
+.hero{position:relative;overflow:visible;min-height:300px;border-color:#1d5b69;margin-top:18px}
+.hero svg.bg{position:absolute;inset:0;width:100%;height:100%;border-radius:10px}
+.hero .in{position:relative;padding:36px 32px;background:linear-gradient(90deg,rgba(6,11,17,.93) 18%,rgba(6,11,17,0) 66%);border-radius:10px;min-height:300px}
+.lab{font:11px 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase}
+.hero h1{margin:10px 0 8px;font-size:42px}
+.sbox{position:relative;max-width:520px}
+.sbox input{width:100%;height:50px;padding:0 16px;font-size:16px;background:rgba(8,17,26,.9)}
+.res{position:absolute;left:0;right:0;top:54px;z-index:20;background:#0b141c;border:1px solid #1d5b69;border-radius:8px;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.6)}
+.res a{display:flex;gap:12px;align-items:center;padding:11px 14px;color:var(--txt);text-decoration:none;border-bottom:1px solid #16303d}
+.res a:hover,.res a:focus{background:rgba(63,214,232,.12)}
+.res small{font:10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--cy);min-width:62px}
+.grid3{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));margin-top:16px}
+.th2{height:120px;position:relative}.th2 svg{width:100%;height:100%;display:block}
+.bd{padding:16px 18px 18px}
+.bd h3{margin:6px 0 2px;font-size:24px}
+.big{font:700 26px 'JetBrains Mono',monospace}
+.row2{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #16303d;font-size:14px}
+.row2:last-child{border-bottom:0}
+.btn2{display:inline-block;margin-top:12px;padding:10px 16px;border:1px solid var(--ac,var(--cy));color:var(--ac,var(--cy));border-radius:6px;text-decoration:none;font-weight:600;font-size:14px}
+.btn2:hover{background:rgba(var(--acr,63,214,232),.14)}
+h2.sec{margin:28px 0 12px;font:600 12px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--cy)}
+.quick{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.qk{display:block;padding:16px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(180deg,#0f1b25,#0a131b);color:var(--txt);text-decoration:none;position:relative;overflow:hidden}
+.qk:hover{border-color:var(--ac)}
+.qk b{display:block;font-size:17px;margin:4px 0}
+.qk span{font-size:13px;color:var(--mut)}
+.qk .i{font-size:22px;color:var(--ac)}
+.qk.soon{opacity:.55;pointer-events:none}
+.qk.soon::after{content:'PRÓXIMAMENTE';position:absolute;right:10px;top:10px;font:9px 'JetBrains Mono',monospace;letter-spacing:.12em;color:var(--am);border:1px solid #5a4318;padding:2px 6px;border-radius:3px}
+.tiles{display:flex;flex-wrap:wrap;gap:10px}
+.tile{flex:1 1 130px;padding:12px;background:#0b141c;border:1px solid #1f3a4a;border-left:3px solid var(--ac,var(--cy));border-radius:4px}
+.tile b{display:block;font:600 22px 'JetBrains Mono',monospace}
+.tile span{font:10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.bar{height:6px;border-radius:3px;background:#16303d;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--gr)}
+@media(max-width:700px){.hero .in{padding:24px 18px;background:linear-gradient(180deg,rgba(6,11,17,.95) 58%,rgba(6,11,17,.3))}.hero h1{font-size:32px}.sbox input{font-size:15px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><span class="logo">SC HUB</span><a class="nl on" href="./">Comercio</a><a class="nl" href="naves.html">Naves</a><a class="nl" href="eventos.html">Eventos</a><span class="info" id="info">Cargando…</span></div>
-<h1>Comercio</h1>
-<p class="sub" id="sub"></p>
-<div class="tabs"><button class="tab on" data-m="routes">Rutas</button><button class="tab" data-m="sell">Vender mi carga</button><button class="tab" data-m="buy">Comprar</button></div>
-<div class="filters">
-<div id="f-com"><label for="com">Mercancía</label><input id="com" list="coms" placeholder="Escribe o elige…" style="width:230px" autocomplete="off"><datalist id="coms"></datalist></div>
-<div id="f-scu"><label for="scu" id="lab-scu">Capacidad (SCU)</label><input id="scu" inputmode="numeric" value="96" style="width:120px"></div>
-<div id="f-cash"><label for="cash">Capital (aUEC)</label><input id="cash" inputmode="numeric" placeholder="sin límite" style="width:160px"></div>
-<div id="f-sys"><label for="sys">Sistema</label><select id="sys"><option value="">Todos</option></select></div>
-<div id="f-age"><label for="age">Antigüedad máx.</label><select id="age"><option value="1">1 hora</option><option value="6">6 horas</option><option value="24" selected>24 horas</option><option value="72">3 días</option><option value="1000000">Cualquiera</option></select></div>
-<div id="f-sort"><label for="sort">Ordenar por</label><select id="sort"></select></div>
+<div class="top"><span class="logo">SC HUB</span><a class="nl on" href="./">Inicio</a><a class="nl" href="comercio.html">Comercio</a><a class="nl" href="naves.html">Naves</a><a class="nl" href="eventos.html">Eventos</a><span class="info" id="info">Cargando…</span></div>
+
+<section class="card hero">
+<svg class="bg" viewBox="0 0 1000 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>
+<radialGradient id="n1" cx="75%" cy="30%" r="50%"><stop offset="0" stop-color="#7a4dff" stop-opacity=".55"/><stop offset="1" stop-color="#7a4dff" stop-opacity="0"/></radialGradient>
+<radialGradient id="n2" cx="30%" cy="95%" r="50%"><stop offset="0" stop-color="#1fd2e6" stop-opacity=".35"/><stop offset="1" stop-color="#1fd2e6" stop-opacity="0"/></radialGradient>
+<radialGradient id="pl" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#3a78a8"/><stop offset=".6" stop-color="#14304a"/><stop offset="1" stop-color="#07111b"/></radialGradient>
+<linearGradient id="sh" x1="0" x2="1"><stop offset="0" stop-color="#5d7384"/><stop offset="1" stop-color="#c9dbe8"/></linearGradient>
+<filter id="gl"><feGaussianBlur stdDeviation="6"/></filter></defs>
+<rect width="1000" height="300" fill="#070f17"/><rect width="1000" height="300" fill="url(#n1)"/><rect width="1000" height="300" fill="url(#n2)"/>
+<g fill="#fff"><circle cx="620" cy="30" r="1.4"/><circle cx="700" cy="70" r="1"/><circle cx="560" cy="220" r="1.2"/><circle cx="880" cy="40" r="1.5"/><circle cx="940" cy="130" r="1"/><circle cx="760" cy="20" r="1"/><circle cx="500" cy="100" r="1"/><circle cx="650" cy="260" r="1.2"/><circle cx="980" cy="250" r="1.4"/><circle cx="820" cy="120" r="1"/></g>
+<circle cx="860" cy="350" r="230" fill="#3fd6e8" opacity=".35" filter="url(#gl)"/><circle cx="860" cy="350" r="220" fill="url(#pl)"/>
+<ellipse cx="860" cy="270" rx="330" ry="34" fill="none" stroke="#6fe3f2" stroke-opacity=".5" stroke-width="2" transform="rotate(-14 860 270)"/>
+<g transform="translate(560 70) rotate(-6)"><ellipse cx="-6" cy="68" rx="46" ry="9" fill="#3fd6e8" filter="url(#gl)"/><line x1="-120" y1="68" x2="-20" y2="68" stroke="#3fd6e8" stroke-opacity=".5" stroke-width="2"/>
+<polygon points="0,68 110,50 215,58 260,68 215,78 110,86" fill="url(#sh)" stroke="#e6f3fb" stroke-opacity=".5"/><polygon points="110,50 80,18 150,46" fill="#7e93a3"/><polygon points="110,86 80,118 150,90" fill="#6a7f8f"/><polygon points="200,60 236,64 200,68" fill="#3fd6e8"/></g></svg>
+<div class="in"><div class="lab" style="color:var(--cy)">● Tu centro de datos · Star Citizen</div>
+<h1>Centro de operaciones</h1>
+<p class="m" style="margin:0 0 20px;max-width:430px">Comercio, naves y guías de eventos. Siempre actualizado.</p>
+<div class="sbox"><label for="gs" style="position:absolute;left:-9999px">Buscar</label><input id="gs" type="search" placeholder="Nave, mercancía o evento…" autocomplete="off"><div class="res" id="res" hidden></div></div></div>
+</section>
+
+<div class="grid3">
+<section class="card ac-b"><div class="th2"><svg viewBox="0 0 320 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><radialGradient id="pa" cx="35%" cy="30%"><stop offset="0" stop-color="#ffb43a"/><stop offset="1" stop-color="#8a3b10"/></radialGradient><radialGradient id="pb" cx="35%" cy="30%"><stop offset="0" stop-color="#6fd0ff"/><stop offset="1" stop-color="#15406a"/></radialGradient></defs><rect width="320" height="120" fill="#0a1824"/><g stroke="#3fd6e8" stroke-opacity=".08"><path d="M0 40H320M0 80H320M60 0V120M140 0V120M220 0V120M300 0V120"/></g><path d="M62 82 Q160 6 262 48" fill="none" stroke="#4fd68a" stroke-width="2" stroke-dasharray="6 5"/><circle cx="62" cy="82" r="24" fill="url(#pa)"/><circle cx="262" cy="48" r="17" fill="url(#pb)"/><rect x="148" y="28" width="16" height="12" rx="2" fill="#4fd68a"/></svg></div>
+<div class="bd" id="c-route"><div class="lab" style="color:var(--ac)">Mejor ruta ahora</div><p class="m">Cargando…</p></div></section>
+
+<section class="card ac-e"><div class="th2"><svg viewBox="0 0 320 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><radialGradient id="ev" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#b6e03a" stop-opacity=".5"/><stop offset="1" stop-color="#0a1410" stop-opacity="0"/></radialGradient><filter id="g2"><feGaussianBlur stdDeviation="3"/></filter></defs><rect width="320" height="120" fill="#0b130d"/><rect width="320" height="120" fill="url(#ev)"/><g transform="translate(160 60) rotate(-30)"><circle r="30" fill="none" stroke="#b6e03a" stroke-width="34" stroke-dasharray="31.4 31.4" opacity=".9" filter="url(#g2)"/><circle r="30" fill="none" stroke="#d8f56a" stroke-width="32" stroke-dasharray="31.4 31.4"/><circle r="8" fill="#d8f56a"/></g><circle cx="160" cy="60" r="54" fill="none" stroke="#b6e03a" stroke-opacity=".5" stroke-dasharray="4 6"/></svg></div>
+<div class="bd" id="c-event"><div class="lab" style="color:var(--ac)">Eventos</div><p class="m">Cargando…</p></div></section>
+
+<section class="card ac-s"><div class="th2"><svg viewBox="0 0 320 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><radialGradient id="sg" cx="60%" cy="50%" r="60%"><stop offset="0" stop-color="#3fd6e8" stop-opacity=".4"/><stop offset="1" stop-color="#3fd6e8" stop-opacity="0"/></radialGradient></defs><rect width="320" height="120" fill="#08121b"/><rect width="320" height="120" fill="url(#sg)"/><g fill="#fff"><circle cx="30" cy="20" r="1.2"/><circle cx="290" cy="30" r="1"/><circle cx="60" cy="100" r="1"/></g><g transform="translate(70 22)"><ellipse cx="-4" cy="40" rx="30" ry="6" fill="#3fd6e8" opacity=".7"/><polygon points="0,40 80,28 160,34 195,40 160,46 80,52" fill="#aebfcb"/><polygon points="80,28 58,6 112,26" fill="#7e93a3"/><polygon points="80,52 58,76 112,54" fill="#6a7f8f"/></g></svg></div>
+<div class="bd" id="c-ships"><div class="lab" style="color:var(--ac)">Naves</div><p class="m">Cargando…</p></div></section>
 </div>
-<section class="card"><div class="scroll" id="out"><p class="empty">Cargando datos…</p></div></section>
-<footer>Web no oficial de la comunidad. Star Citizen es una marca de Cloud Imperium Rights LLC. Los precios provienen de <a href="https://uexcorp.space" target="_blank" rel="noopener">UEX Corp</a> y los aportan los jugadores: fíjate siempre en la antigüedad del dato.</footer>
+
+<h2 class="sec">Accesos rápidos</h2>
+<div class="quick">
+<a class="qk" style="--ac:#4fd68a" href="comercio.html"><div class="i">⇄</div><b>Rutas de comercio</b><span>Mejor compra, mejor venta y beneficio real.</span></a>
+<a class="qk" style="--ac:#4fd68a" href="comercio.html?m=sell"><div class="i">⬆</div><b>Vender mi carga</b><span>Dónde te pagan más por lo que llevas.</span></a>
+<a class="qk" style="--ac:#3fd6e8" href="naves.html"><div class="i">➤</div><b>Naves</b><span>Precios, estadísticas y cambio de componentes.</span></a>
+<a class="qk" style="--ac:#b6e03a" href="eventos.html"><div class="i">☢</div><b>Guías de eventos</b><span>Paso a paso, escritas por la comunidad.</span></a>
+<a class="qk soon" style="--ac:#a66bff" href="#"><div class="i">◈</div><b>Minería</b><span>Dónde minar cada mineral.</span></a>
+<a class="qk soon" style="--ac:#ffb43a" href="#"><div class="i">✦</div><b>Misiones y blueprints</b><span>Qué misión da qué plano.</span></a>
+</div>
+
+<h2 class="sec">Estado de los datos</h2>
+<section class="card ac-k"><div class="bd" id="c-data"><p class="m">Cargando…</p></div></section>
+
+<footer>Web privada y no oficial de la comunidad. Star Citizen es una marca de Cloud Imperium Rights LLC. Precios de <a href="https://uexcorp.space" target="_blank" rel="noopener">UEX Corp</a> (los aportan los jugadores) y estadísticas de naves de la <a href="https://api.star-citizen.wiki" target="_blank" rel="noopener">Star Citizen Wiki API</a>.</footer>
 </div>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 0});
-const num = v => { const d = String(v).replace(/\D/g, ''); return d ? Number(d) : 0; };
-function load(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
-function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-// Filtro de antigüedad desactivado. Para volver a activarlo: cambia false por true.
-const AGE_FILTER = false;
-let DATA, META, EXTRA = 0, MODE = 'routes', AGE_SORT = null;  // AGE_SORT: null | 'new' (recientes primero) | 'old'
-const IDS = ['com', 'scu', 'cash', 'sys', 'age', 'sort'];
-const SORTS = {routes: [['total', 'Beneficio total'], ['per', 'Beneficio por SCU'], ['pct', 'Beneficio %']], sell: [['price', 'Precio más alto'], ['total', 'Ingreso total']], buy: [['price', 'Precio más bajo'], ['stock', 'Más stock']]};
-const SHOW = {routes: ['scu', 'cash', 'sys', 'age', 'sort'], sell: ['com', 'scu', 'sys', 'age', 'sort'], buy: ['com', 'scu', 'cash', 'sys', 'age', 'sort']};
-const SCULAB = {routes: 'Capacidad (SCU)', sell: 'SCU que tienes', buy: 'SCU que quieres'};
-const SUB = {routes: 'Mejor terminal para comprar, mejor para vender, y cuántos SCU puedes mover de verdad.', sell: 'Elige la mercancía que llevas y mira dónde te pagan más por ella.', buy: 'Elige una mercancía y mira dónde comprarla más barata, con su stock.'};
-
-const ageCmp = (a, b) => (a === b ? 0 : AGE_SORT === 'old' ? b - a : a - b);
-function ageHead() {
-  const arrow = AGE_SORT === 'new' ? ' ▲' : AGE_SORT === 'old' ? ' ▼' : ' ⇅';
-  return '<button class="sortb" data-agesort title="Ordenar por antigüedad del dato">Dato' + arrow + '</button>';
-}
-function ageOf(e) { return e.age_h == null ? Infinity : e.age_h + EXTRA; }
+async function get(n) { try { const r = await fetch('data/' + n, {cache: 'no-store'}); if (!r.ok) throw new Error(); return await r.json(); } catch (e) { return null; } }
 function ageText(h) {
-  if (!isFinite(h)) return 'sin fecha';
+  if (h == null || !isFinite(h)) return 'sin fecha';
   if (h < 1) return Math.max(1, Math.round(h * 60)) + ' min';
   if (h < 48) return Math.round(h) + ' h';
   return Math.round(h / 24) + ' d';
 }
-const dot = h => '<span class="' + (h < 1 ? 'g' : h < 24 ? 'a' : 'r') + '">● ' + ageText(h) + '</span>';
-function where(e) { return esc(e.terminal) + '<div class="m">' + esc([e.place, e.system].filter(Boolean).join(' · ')) + '</div>'; }
-function ok(e) { const sys = $('sys').value; return (!sys || e.system === sys) && (!AGE_FILTER || ageOf(e) <= Number($('age').value)); }
-function msg(t) { $('out').innerHTML = '<p class="empty">' + t + '</p>'; }
+const dot = h => '<span style="color:' + (h < 1 ? 'var(--gr)' : h < 24 ? 'var(--am)' : 'var(--rd)') + '">● ' + ageText(h) + '</span>';
+let C, S, G, M, EXTRA = 0;
+const ageOf = e => e.age_h == null ? Infinity : e.age_h + EXTRA;
 
-function setMode(m) {
-  MODE = m; AGE_SORT = null; save('sch_mode', m);
-  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.m === m));
-  IDS.forEach(k => { $('f-' + k).style.display = SHOW[m].includes(k) && (k !== 'age' || AGE_FILTER) ? '' : 'none'; });
-  $('lab-scu').textContent = SCULAB[m]; $('sub').textContent = SUB[m];
-  const cur = load('sch_sort_' + m, SORTS[m][0][0]);
-  $('sort').innerHTML = SORTS[m].map(o => '<option value="' + o[0] + '"' + (o[0] === cur ? ' selected' : '') + '>' + o[1] + '</option>').join('');
-  render();
-}
-
-function renderRoutes() {
-  const cap = num($('scu').value), cash = num($('cash').value) || Infinity, sort = $('sort').value;
-  const routes = [];
-  for (const c of DATA.commodities) {
+function bestRoutes(cap) {
+  const out = [];
+  for (const c of (C && C.commodities) || []) {
     let best = null;
-    for (const b of c.buy.filter(ok)) for (const s of c.sell.filter(ok)) {
+    for (const b of c.buy) for (const s of c.sell) {
       if (s.no_demand || b.terminal === s.terminal) continue;
       const per = s.price - b.price;
       if (per <= 0) continue;
-      const scu = Math.min(cap, b.scu == null ? cap : b.scu, s.demand == null ? cap : s.demand, Math.floor(cash / b.price));
+      const scu = Math.min(cap, b.scu == null ? cap : b.scu, s.demand == null ? cap : s.demand);
       if (scu <= 0) continue;
-      const r = {name: c.name, b, s, per, scu, pct: 100 * per / b.price, total: per * scu, age: Math.max(ageOf(b), ageOf(s))};
-      if (!best || r[sort] > best[sort]) best = r;
+      const r = {name: c.name, b, s, per, scu, total: per * scu, pct: 100 * per / b.price, age: Math.max(ageOf(b), ageOf(s))};
+      const fresh = r.age < 24, bf = best && best.age < 24;
+      if (!best || (fresh && !bf) || (fresh === bf && r.total > best.total)) best = r;
     }
-    if (best) routes.push(best);
+    if (best) out.push(best);
   }
-  routes.sort((x, y) => y[sort] - x[sort]);
-  if (AGE_SORT) routes.sort((x, y) => ageCmp(x.age, y.age));
-  if (!routes.length) return msg('No hay rutas con estos filtros. Prueba a cambiar de sistema o a subir tu capital.');
-  $('out').innerHTML = '<div class="mobbar">Ordenar por: ' + ageHead() + '</div><table class="cards routes"><thead><tr><th>Mercancía</th><th>Comprar en (más barato)</th><th>Stock</th><th>Vender en (más caro)</th><th>Demanda</th><th>SCU a cargar</th><th>Por SCU</th><th>Margen %</th><th>Total</th><th>' + ageHead() + '</th></tr></thead><tbody>' +
-    routes.slice(0, 100).map(r => '<tr><td class="full nolabel" data-label="Mercancía"><b>' + esc(r.name) + '</b></td><td data-label="Comprar en">' + where(r.b) + '<div class="n m">' + fmt(r.b.price) + ' /SCU</div></td><td class="n" data-label="Stock">' + (r.b.scu == null ? '?' : fmt(r.b.scu)) + '</td><td data-label="Vender en">' + where(r.s) + '<div class="n m">' + fmt(r.s.price) + ' /SCU</div></td><td class="n" data-label="Demanda">' + (r.s.demand == null ? '?' : fmt(r.s.demand)) + '</td><td class="n" data-label="SCU a cargar">' + fmt(r.scu) + '</td><td class="n g" data-label="Por SCU">+ ' + fmt(r.per) + '</td><td class="n g" data-label="Margen %">' + r.pct.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' %</td><td class="n g" data-label="Total"><b>' + fmt(r.total) + '</b></td><td data-label="Dato">' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
+  out.sort((x, y) => ((y.age < 24) - (x.age < 24)) || y.total - x.total);
+  return out;
 }
 
-function renderList() {
-  const sell = MODE === 'sell';
-  const name = $('com').value.trim().toLowerCase();
-  const c = DATA.commodities.find(x => x.name.toLowerCase() === name);
-  if (!c) return msg('Elige una mercancía de la lista para ver ' + (sell ? 'dónde se vende más caro.' : 'dónde comprarla más barata.'));
-  const qty = num($('scu').value), cash = num($('cash').value) || Infinity, sort = $('sort').value;
-  const rows = (sell ? c.sell : c.buy).filter(e => ok(e) && !e.no_demand).map(e => {
-    const lim = sell ? e.demand : e.scu;
-    let n = qty ? Math.min(qty, lim == null ? qty : lim) : (lim == null ? 0 : lim);
-    if (!sell) n = Math.min(n, Math.floor(cash / e.price));
-    return {e, lim, n, total: e.price * n, age: ageOf(e)};
-  });
-  rows.sort((x, y) => sort === 'total' ? y.total - x.total : sort === 'stock' ? (y.lim || 0) - (x.lim || 0) : sell ? y.e.price - x.e.price : x.e.price - y.e.price);
-  if (AGE_SORT) rows.sort((x, y) => ageCmp(x.age, y.age));
-  if (!rows.length) return msg('No hay datos de ' + esc(c.name) + ' con estos filtros. Prueba a cambiar de sistema.');
-  $('out').innerHTML = '<div class="mobbar">Ordenar por: ' + ageHead() + '</div><table class="cards"><thead><tr><th>Terminal</th><th>Precio /SCU</th><th>' + (sell ? 'Demanda' : 'Stock') + '</th><th>' + (sell ? 'Puedes vender' : 'Puedes comprar') + '</th><th>' + (sell ? 'Ingreso' : 'Coste') + '</th><th>' + ageHead() + '</th></tr></thead><tbody>' +
-    rows.slice(0, 60).map(r => '<tr><td class="full nolabel" data-label="Terminal">' + where(r.e) + '</td><td class="n ' + (sell ? 'g' : '') + '" data-label="Precio /SCU"><b>' + fmt(r.e.price) + '</b></td><td class="n" data-label="' + (sell ? 'Demanda' : 'Stock') + '">' + (r.lim == null ? '?' : fmt(r.lim)) + '</td><td class="n" data-label="' + (sell ? 'Puedes vender' : 'Puedes comprar') + '">' + fmt(r.n) + (qty && r.n < qty ? '<div class="note">solo ' + fmt(r.n) + ' de ' + fmt(qty) + '</div>' : '') + '</td><td class="n" data-label="' + (sell ? 'Ingreso' : 'Coste') + '">' + (r.n ? fmt(r.total) : '—') + '</td><td data-label="Dato">' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
+function renderRoute() {
+  const el = $('c-route'), rs = bestRoutes(96);
+  if (!rs.length) { el.innerHTML = '<div class="lab" style="color:var(--ac)">Mejor ruta ahora</div><p class="m">Aún no hay datos de comercio.</p>'; return; }
+  const r = rs[0];
+  el.innerHTML = '<div class="lab" style="color:var(--ac)">Mejor ruta ahora · 96 SCU</div><h3>' + esc(r.name) + '</h3><div class="m" style="font-size:13px">' + esc(r.b.terminal) + ' → ' + esc(r.s.terminal) + '</div>' +
+    '<div class="big" style="color:var(--gr);margin:10px 0 2px">+ ' + fmt(r.total) + ' <span style="font-size:14px;color:var(--mut)">aUEC</span></div><div style="font-size:13px">' + r.pct.toFixed(1).replace('.', ',') + ' % de margen · ' + dot(r.age) + '</div>' +
+    rs.slice(1, 3).map(x => '<div class="row2"><span>' + esc(x.name) + '</span><span style="color:var(--gr)">+ ' + fmt(x.total) + '</span></div>').join('').replace(/^/, '<div style="margin-top:10px">') + '</div>' +
+    '<a class="btn2" href="comercio.html">Ver todas las rutas →</a>';
+}
+function renderEvent() {
+  const el = $('c-event'), gs = G || [], act = gs.filter(g => g.status === 'activo');
+  if (!gs.length) { el.innerHTML = '<div class="lab" style="color:var(--ac)">Eventos</div><h3>Sin guías todavía</h3><p class="m" style="font-size:13px">Añade archivos .md en web/guias del repositorio.</p><a class="btn2" href="eventos.html">Ir a eventos →</a>'; return; }
+  const g = act[0] || gs[0];
+  el.innerHTML = '<div class="lab" style="color:var(--ac)">' + (act.length ? '● Evento activo' : 'Guías de eventos') + '</div><h3>' + esc(g.title) + '</h3><p class="m" style="font-size:13px;margin:0">' + esc(g.summary || '') + '</p>' +
+    (g.patch ? '<p class="m" style="font-size:12px;margin:8px 0 0">Revisada en el parche ' + esc(g.patch) + '</p>' : '') +
+    (act.length > 1 ? '<div style="margin-top:10px">' + act.slice(1, 3).map(x => '<div class="row2"><span>' + esc(x.title) + '</span><span style="color:var(--gr)">● activo</span></div>').join('') + '</div>' : '') +
+    '<a class="btn2" href="eventos.html#' + encodeURIComponent(g.slug) + '">Abrir guía →</a> <span class="m" style="font-size:12px;margin-left:8px">' + gs.length + ' guías</span>';
+}
+function renderShips() {
+  const el = $('c-ships'), ships = (S && S.ships) || [];
+  const cheap = ships.filter(s => s.buy && s.buy.length).map(s => ({s, p: s.buy[0]})).sort((a, b) => a.p.price - b.p.price).slice(0, 3);
+  const withStats = ships.filter(s => s.wid).length;
+  el.innerHTML = '<div class="lab" style="color:var(--ac)">Naves · ' + fmt(ships.length) + ' en total</div><h3>Las más baratas de comprar</h3>' +
+    (cheap.length ? cheap.map(x => '<a class="row2" style="text-decoration:none;color:inherit" href="naves.html?q=' + encodeURIComponent(x.s.full || x.s.name) + '"><span>' + esc(x.s.full || x.s.name) + '</span><span class="n" style="color:var(--ac)">' + fmt(x.p.price) + '</span></a>').join('') : '<p class="m">Aún no hay datos.</p>') +
+    '<p class="m" style="font-size:12px;margin:8px 0 0">' + fmt(withStats) + ' con estadísticas y cambio de componentes.</p><a class="btn2" href="naves.html">Buscar una nave →</a>';
+}
+function renderData() {
+  const el = $('c-data');
+  if (!M) { el.innerHTML = '<p class="m">No se pudieron cargar los datos.</p>'; return; }
+  const gv = M.game_versions || {}, st = M.static_diag || {}, fresh = M.fresh_under_24h_percent;
+  const hAgo = t => t ? ageText((Date.now() - Date.parse(t)) / 36e5) : '—';
+  const tile = (l, v) => '<div class="tile"><b>' + v + '</b><span>' + l + '</span></div>';
+  el.innerHTML = '<div class="tiles">' + tile('Parche LIVE', esc(gv.live || '—')) + tile('PTU', esc(gv.ptu || '—')) + tile('Mercancías', fmt(M.commodities || 0)) + tile('Precios', fmt(M.price_records || 0)) + tile('Naves', fmt(((S && S.ships) || []).length)) + tile('Guías', fmt((G || []).length)) + '</div>' +
+    '<div class="row2" style="margin-top:12px"><span class="m">Precios de comercio actualizados</span><span>hace ' + hAgo(M.generated_at) + '</span></div>' +
+    '<div class="row2"><span class="m">Naves y componentes (solo cambian con parche)</span><span>hace ' + hAgo(st.fetched_at) + '</span></div>' +
+    '<div class="row2"><span class="m">Precios con menos de 24 h</span><span>' + (fresh == null ? '—' : fresh + ' %') + '</span></div>' +
+    (fresh == null ? '' : '<div class="bar"><i style="width:' + Math.min(100, fresh) + '%"></i></div>') +
+    '<p class="m" style="font-size:12px;margin:10px 0 0">Los precios los suben los jugadores a UEX: cuanta más antigüedad, menos fiable. Cada pantalla marca la edad de cada dato.</p>';
 }
 
-function render() {
-  IDS.forEach(k => { if (k !== 'sort') save('sch_' + k, $(k).value); });
-  save('sch_sort_' + MODE, $('sort').value);
-  if (MODE === 'routes') renderRoutes(); else renderList();
+function search(q) {
+  q = q.trim().toLowerCase();
+  if (q.length < 2) return [];
+  const res = [], inc = s => (s || '').toLowerCase().includes(q);
+  ((S && S.ships) || []).forEach(s => { const n = s.full || s.name; if (inc(n)) res.push({k: 'Nave', t: n, href: 'naves.html?q=' + encodeURIComponent(n)}); });
+  ((C && C.commodities) || []).forEach(c => { if (inc(c.name)) { res.push({k: 'Vender', t: c.name, href: 'comercio.html?m=sell&c=' + encodeURIComponent(c.name)}); res.push({k: 'Comprar', t: c.name, href: 'comercio.html?m=buy&c=' + encodeURIComponent(c.name)}); } });
+  (G || []).forEach(g => { if (inc(g.title)) res.push({k: 'Evento', t: g.title, href: 'eventos.html#' + encodeURIComponent(g.slug)}); });
+  return res.slice(0, 8);
+}
+function showResults() {
+  const rs = search($('gs').value), box = $('res');
+  box.hidden = !rs.length && $('gs').value.trim().length < 2;
+  box.innerHTML = rs.length ? rs.map(r => '<a href="' + esc(r.href) + '"><small>' + r.k + '</small><span>' + esc(r.t) + '</span></a>').join('') : ($('gs').value.trim().length >= 2 ? '<div style="padding:12px 14px" class="m">Sin resultados.</div>' : '');
+  box.hidden = !box.innerHTML;
 }
 
 async function init() {
-  try {
-    const [a, b] = await Promise.all([fetch('data/commodities.json', {cache: 'no-store'}), fetch('data/meta.json', {cache: 'no-store'})]);
-    if (!a.ok || !b.ok) throw new Error('HTTP');
-    DATA = await a.json(); META = await b.json();
-  } catch (e) { msg('No se pudieron cargar los datos. Inténtalo de nuevo en unos minutos.'); $('info').textContent = 'Sin datos'; return; }
-  EXTRA = Math.max(0, (Date.now() - Date.parse(META.generated_at)) / 36e5);
-  const systems = new Set();
-  DATA.commodities.forEach(c => c.buy.concat(c.sell).forEach(e => e.system && systems.add(e.system)));
-  [...systems].sort().forEach(s => $('sys').insertAdjacentHTML('beforeend', '<option>' + esc(s) + '</option>'));
-  $('coms').innerHTML = DATA.commodities.map(c => c.name).sort().map(n => '<option value="' + esc(n) + '">').join('');
-  IDS.forEach(k => { if (k !== 'sort') { const v = load('sch_' + k, null); if (v !== null) $(k).value = v; } });
-  ['com', 'scu', 'cash'].forEach(k => $(k).addEventListener('input', render));
-  ['age', 'sort', 'sys'].forEach(k => $(k).addEventListener('change', () => { if (k === 'sort') AGE_SORT = null; render(); }));
-  $('out').addEventListener('click', ev => { if (ev.target.closest('[data-agesort]')) { AGE_SORT = AGE_SORT === null ? 'new' : AGE_SORT === 'new' ? 'old' : null; render(); } });
-  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
-  const v = META.game_versions && META.game_versions.live;
-  $('info').innerHTML = (v ? 'Parche <b>' + esc(v) + '</b> · ' : '') + 'datos de hace <b>' + ageText(EXTRA) + '</b> · <b>' + (META.fresh_under_24h_percent == null ? '?' : META.fresh_under_24h_percent) + '%</b> de los precios, de menos de 24 h';
-  const m = load('sch_mode', 'routes');
-  setMode(SORTS[m] ? m : 'routes');
+  [C, S, G, M] = await Promise.all([get('commodities.json'), get('ships.json'), get('guides.json'), get('meta.json')]);
+  if (!C && !S && !G && !M) { $('info').textContent = 'Sin datos'; }
+  EXTRA = C && C.generated_at ? Math.max(0, (Date.now() - Date.parse(C.generated_at)) / 36e5) : 0;
+  const v = M && M.game_versions && M.game_versions.live;
+  $('info').innerHTML = (v ? 'Parche <b>' + esc(v) + '</b> · ' : '') + 'precios de hace <b>' + (M ? ageText((Date.now() - Date.parse(M.generated_at)) / 36e5) : '—') + '</b>';
+  renderRoute(); renderEvent(); renderShips(); renderData();
+  $('gs').addEventListener('input', showResults);
+  $('gs').addEventListener('keydown', ev => { if (ev.key === 'Enter') { const a = $('res').querySelector('a'); if (a) location.href = a.getAttribute('href'); } if (ev.key === 'Escape') $('res').hidden = true; });
+  document.addEventListener('click', ev => { if (!ev.target.closest('.sbox')) $('res').hidden = true; });
 }
 init();
 </script>
