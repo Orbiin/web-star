@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>SC HUB · Comercio</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060b11;--panel:#0f1b25;--line:#1a3544;--txt:#d6e4ee;--mut:#8aa0b2;--cy:#3fd6e8;--gr:#4fd68a;--am:#ffb43a;--rd:#ff6b5e}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 80% 0,rgba(122,77,255,.12),transparent 40%),radial-gradient(circle at 10% 90%,rgba(63,214,232,.09),transparent 40%),var(--bg);color:var(--txt);font-family:'Chakra Petch',system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:20px}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--cy);box-shadow:0 8px 20px -14px var(--cy)}
+.logo{font-size:20px;font-weight:700;letter-spacing:.14em;color:var(--cy);text-shadow:0 0 14px var(--cy)}
+.sortb{background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:0}
+.sortb:hover,.sortb:focus-visible{color:#fff;text-shadow:0 0 8px var(--cy)}
+.nl{padding:8px 14px;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;text-decoration:none;font-size:14px}
+.nl.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12)}
+.info{margin-left:auto;font-size:13px;color:var(--mut)}
+.info b{font-family:'JetBrains Mono',monospace;color:var(--txt)}
+h1{margin:22px 0 6px;font-size:34px;text-shadow:0 0 24px rgba(63,214,232,.4)}
+.sub{margin:0 0 18px;color:var(--mut)}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:18px}
+label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+input,select{height:44px;padding:0 12px;background:#08111a;border:1px solid #1d5b69;border-radius:6px;color:var(--txt);font-family:inherit;font-size:15px}
+input:focus,select:focus{outline:2px solid var(--cy)}
+.card{background:linear-gradient(180deg,#0f1b25,#0a131b);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:980px}
+th{padding:11px 12px;text-align:left;font:600 11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);background:rgba(63,214,232,.07);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid #16303d;font-size:14px;vertical-align:top}
+tr:first-child td{background:rgba(63,214,232,.08)}
+.n{font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.m{color:var(--mut);font-size:12px}
+.g{color:var(--gr)}.a{color:var(--am)}.r{color:var(--rd)}
+.empty{padding:30px;text-align:center;color:var(--mut)}
+footer{margin:22px 0;color:var(--mut);font-size:12px;line-height:1.6}
+a{color:var(--cy)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.tab{min-height:44px;padding:0 20px;background:#0d1a24;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;font-family:inherit;font-size:15px;cursor:pointer}
+.tab.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12);text-shadow:0 0 10px var(--cy)}
+.note{font-size:12px;color:var(--am)}
+
+/* ---- móvil: las tablas pasan a tarjetas para ver los datos clave sin deslizar ---- */
+.mobbar{display:none}
+@media(max-width:760px){
+  .mobbar{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--mut);font-size:13px}
+  table.cards{min-width:0!important;width:100%}
+  table.cards thead{display:none}
+  table.cards tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  table.cards td{display:block;padding:0;border:0;white-space:normal}
+  table.cards td::before{content:attr(data-label);display:block;font:10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
+  table.cards td.full{grid-column:1/-1}
+  table.cards td.nolabel::before{display:none}
+  table.cards td.nolabel{font-size:16px}
+  table.cards tr:first-child td{background:none}
+  table.cards tbody tr:first-child{background:rgba(63,214,232,.08)}
+  table.routes td{order:2}
+  table.routes td:nth-child(1){order:0}
+  table.routes td:nth-child(9){order:1;grid-column:1/-1;font-size:18px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><span class="logo">SC HUB</span><a class="nl" href="./">Inicio</a><a class="nl on" href="comercio.html">Comercio</a><a class="nl" href="naves.html">Naves</a><a class="nl" href="eventos.html">Eventos</a><span class="info" id="info">Cargando…</span></div>
+<h1>Comercio</h1>
+<p class="sub" id="sub"></p>
+<div class="tabs"><button class="tab on" data-m="routes">Rutas</button><button class="tab" data-m="sell">Vender mi carga</button><button class="tab" data-m="buy">Comprar</button></div>
+<div class="filters">
+<div id="f-com"><label for="com">Mercancía</label><input id="com" list="coms" placeholder="Escribe o elige…" style="width:230px" autocomplete="off"><datalist id="coms"></datalist></div>
+<div id="f-scu"><label for="scu" id="lab-scu">Capacidad (SCU)</label><input id="scu" inputmode="numeric" value="96" style="width:120px"></div>
+<div id="f-cash"><label for="cash">Capital (aUEC)</label><input id="cash" inputmode="numeric" placeholder="sin límite" style="width:160px"></div>
+<div id="f-sys"><label for="sys">Sistema</label><select id="sys"><option value="">Todos</option></select></div>
+<div id="f-age"><label for="age">Antigüedad máx.</label><select id="age"><option value="1">1 hora</option><option value="6">6 horas</option><option value="24" selected>24 horas</option><option value="72">3 días</option><option value="1000000">Cualquiera</option></select></div>
+<div id="f-sort"><label for="sort">Ordenar por</label><select id="sort"></select></div>
+</div>
+<section class="card"><div class="scroll" id="out"><p class="empty">Cargando datos…</p></div></section>
+<footer>Web no oficial de la comunidad. Star Citizen es una marca de Cloud Imperium Rights LLC. Los precios provienen de <a href="https://uexcorp.space" target="_blank" rel="noopener">UEX Corp</a> y los aportan los jugadores: fíjate siempre en la antigüedad del dato.</footer>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 0});
+const num = v => { const d = String(v).replace(/\D/g, ''); return d ? Number(d) : 0; };
+function load(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+// Filtro de antigüedad desactivado. Para volver a activarlo: cambia false por true.
+const AGE_FILTER = false;
+let DATA, META, EXTRA = 0, MODE = 'routes', AGE_SORT = null;  // AGE_SORT: null | 'new' (recientes primero) | 'old'
+const IDS = ['com', 'scu', 'cash', 'sys', 'age', 'sort'];
+const SORTS = {routes: [['total', 'Beneficio total'], ['per', 'Beneficio por SCU'], ['pct', 'Beneficio %']], sell: [['price', 'Precio más alto'], ['total', 'Ingreso total']], buy: [['price', 'Precio más bajo'], ['stock', 'Más stock']]};
+const SHOW = {routes: ['scu', 'cash', 'sys', 'age', 'sort'], sell: ['com', 'scu', 'sys', 'age', 'sort'], buy: ['com', 'scu', 'cash', 'sys', 'age', 'sort']};
+const SCULAB = {routes: 'Capacidad (SCU)', sell: 'SCU que tienes', buy: 'SCU que quieres'};
+const SUB = {routes: 'Mejor terminal para comprar, mejor para vender, y cuántos SCU puedes mover de verdad.', sell: 'Elige la mercancía que llevas y mira dónde te pagan más por ella.', buy: 'Elige una mercancía y mira dónde comprarla más barata, con su stock.'};
+
+const ageCmp = (a, b) => (a === b ? 0 : AGE_SORT === 'old' ? b - a : a - b);
+function ageHead() {
+  const arrow = AGE_SORT === 'new' ? ' ▲' : AGE_SORT === 'old' ? ' ▼' : ' ⇅';
+  return '<button class="sortb" data-agesort title="Ordenar por antigüedad del dato">Dato' + arrow + '</button>';
+}
+function ageOf(e) { return e.age_h == null ? Infinity : e.age_h + EXTRA; }
+function ageText(h) {
+  if (!isFinite(h)) return 'sin fecha';
+  if (h < 1) return Math.max(1, Math.round(h * 60)) + ' min';
+  if (h < 48) return Math.round(h) + ' h';
+  return Math.round(h / 24) + ' d';
+}
+const dot = h => '<span class="' + (h < 1 ? 'g' : h < 24 ? 'a' : 'r') + '">● ' + ageText(h) + '</span>';
+function where(e) { return esc(e.terminal) + '<div class="m">' + esc([e.place, e.system].filter(Boolean).join(' · ')) + '</div>'; }
+function ok(e) { const sys = $('sys').value; return (!sys || e.system === sys) && (!AGE_FILTER || ageOf(e) <= Number($('age').value)); }
+function msg(t) { $('out').innerHTML = '<p class="empty">' + t + '</p>'; }
+
+function setMode(m) {
+  MODE = m; AGE_SORT = null; save('sch_mode', m);
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  IDS.forEach(k => { $('f-' + k).style.display = SHOW[m].includes(k) && (k !== 'age' || AGE_FILTER) ? '' : 'none'; });
+  $('lab-scu').textContent = SCULAB[m]; $('sub').textContent = SUB[m];
+  const cur = load('sch_sort_' + m, SORTS[m][0][0]);
+  $('sort').innerHTML = SORTS[m].map(o => '<option value="' + o[0] + '"' + (o[0] === cur ? ' selected' : '') + '>' + o[1] + '</option>').join('');
+  render();
+}
+
+function renderRoutes() {
+  const cap = num($('scu').value), cash = num($('cash').value) || Infinity, sort = $('sort').value;
+  const routes = [];
+  for (const c of DATA.commodities) {
+    let best = null;
+    for (const b of c.buy.filter(ok)) for (const s of c.sell.filter(ok)) {
+      if (s.no_demand || b.terminal === s.terminal) continue;
+      const per = s.price - b.price;
+      if (per <= 0) continue;
+      const scu = Math.min(cap, b.scu == null ? cap : b.scu, s.demand == null ? cap : s.demand, Math.floor(cash / b.price));
+      if (scu <= 0) continue;
+      const r = {name: c.name, b, s, per, scu, pct: 100 * per / b.price, total: per * scu, age: Math.max(ageOf(b), ageOf(s))};
+      if (!best || r[sort] > best[sort]) best = r;
+    }
+    if (best) routes.push(best);
+  }
+  routes.sort((x, y) => y[sort] - x[sort]);
+  if (AGE_SORT) routes.sort((x, y) => ageCmp(x.age, y.age));
+  if (!routes.length) return msg('No hay rutas con estos filtros. Prueba a cambiar de sistema o a subir tu capital.');
+  $('out').innerHTML = '<div class="mobbar">Ordenar por: ' + ageHead() + '</div><table class="cards routes"><thead><tr><th>Mercancía</th><th>Comprar en (más barato)</th><th>Stock</th><th>Vender en (más caro)</th><th>Demanda</th><th>SCU a cargar</th><th>Por SCU</th><th>Margen %</th><th>Total</th><th>' + ageHead() + '</th></tr></thead><tbody>' +
+    routes.slice(0, 100).map(r => '<tr><td class="full nolabel" data-label="Mercancía"><b>' + esc(r.name) + '</b></td><td data-label="Comprar en">' + where(r.b) + '<div class="n m">' + fmt(r.b.price) + ' /SCU</div></td><td class="n" data-label="Stock">' + (r.b.scu == null ? '?' : fmt(r.b.scu)) + '</td><td data-label="Vender en">' + where(r.s) + '<div class="n m">' + fmt(r.s.price) + ' /SCU</div></td><td class="n" data-label="Demanda">' + (r.s.demand == null ? '?' : fmt(r.s.demand)) + '</td><td class="n" data-label="SCU a cargar">' + fmt(r.scu) + '</td><td class="n g" data-label="Por SCU">+ ' + fmt(r.per) + '</td><td class="n g" data-label="Margen %">' + r.pct.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' %</td><td class="n g" data-label="Total"><b>' + fmt(r.total) + '</b></td><td data-label="Dato">' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
+}
+
+function renderList() {
+  const sell = MODE === 'sell';
+  const name = $('com').value.trim().toLowerCase();
+  const c = DATA.commodities.find(x => x.name.toLowerCase() === name);
+  if (!c) return msg('Elige una mercancía de la lista para ver ' + (sell ? 'dónde se vende más caro.' : 'dónde comprarla más barata.'));
+  const qty = num($('scu').value), cash = num($('cash').value) || Infinity, sort = $('sort').value;
+  const rows = (sell ? c.sell : c.buy).filter(e => ok(e) && !e.no_demand).map(e => {
+    const lim = sell ? e.demand : e.scu;
+    let n = qty ? Math.min(qty, lim == null ? qty : lim) : (lim == null ? 0 : lim);
+    if (!sell) n = Math.min(n, Math.floor(cash / e.price));
+    return {e, lim, n, total: e.price * n, age: ageOf(e)};
+  });
+  rows.sort((x, y) => sort === 'total' ? y.total - x.total : sort === 'stock' ? (y.lim || 0) - (x.lim || 0) : sell ? y.e.price - x.e.price : x.e.price - y.e.price);
+  if (AGE_SORT) rows.sort((x, y) => ageCmp(x.age, y.age));
+  if (!rows.length) return msg('No hay datos de ' + esc(c.name) + ' con estos filtros. Prueba a cambiar de sistema.');
+  $('out').innerHTML = '<div class="mobbar">Ordenar por: ' + ageHead() + '</div><table class="cards"><thead><tr><th>Terminal</th><th>Precio /SCU</th><th>' + (sell ? 'Demanda' : 'Stock') + '</th><th>' + (sell ? 'Puedes vender' : 'Puedes comprar') + '</th><th>' + (sell ? 'Ingreso' : 'Coste') + '</th><th>' + ageHead() + '</th></tr></thead><tbody>' +
+    rows.slice(0, 60).map(r => '<tr><td class="full nolabel" data-label="Terminal">' + where(r.e) + '</td><td class="n ' + (sell ? 'g' : '') + '" data-label="Precio /SCU"><b>' + fmt(r.e.price) + '</b></td><td class="n" data-label="' + (sell ? 'Demanda' : 'Stock') + '">' + (r.lim == null ? '?' : fmt(r.lim)) + '</td><td class="n" data-label="' + (sell ? 'Puedes vender' : 'Puedes comprar') + '">' + fmt(r.n) + (qty && r.n < qty ? '<div class="note">solo ' + fmt(r.n) + ' de ' + fmt(qty) + '</div>' : '') + '</td><td class="n" data-label="' + (sell ? 'Ingreso' : 'Coste') + '">' + (r.n ? fmt(r.total) : '—') + '</td><td data-label="Dato">' + dot(r.age) + '</td></tr>').join('') + '</tbody></table>';
+}
+
+function render() {
+  IDS.forEach(k => { if (k !== 'sort') save('sch_' + k, $(k).value); });
+  save('sch_sort_' + MODE, $('sort').value);
+  if (MODE === 'routes') renderRoutes(); else renderList();
+}
+
+async function init() {
+  try {
+    const [a, b] = await Promise.all([fetch('data/commodities.json', {cache: 'no-store'}), fetch('data/meta.json', {cache: 'no-store'})]);
+    if (!a.ok || !b.ok) throw new Error('HTTP');
+    DATA = await a.json(); META = await b.json();
+  } catch (e) { msg('No se pudieron cargar los datos. Inténtalo de nuevo en unos minutos.'); $('info').textContent = 'Sin datos'; return; }
+  EXTRA = Math.max(0, (Date.now() - Date.parse(META.generated_at)) / 36e5);
+  const systems = new Set();
+  DATA.commodities.forEach(c => c.buy.concat(c.sell).forEach(e => e.system && systems.add(e.system)));
+  [...systems].sort().forEach(s => $('sys').insertAdjacentHTML('beforeend', '<option>' + esc(s) + '</option>'));
+  $('coms').innerHTML = DATA.commodities.map(c => c.name).sort().map(n => '<option value="' + esc(n) + '">').join('');
+  IDS.forEach(k => { if (k !== 'sort') { const v = load('sch_' + k, null); if (v !== null) $(k).value = v; } });
+  ['com', 'scu', 'cash'].forEach(k => $(k).addEventListener('input', render));
+  ['age', 'sort', 'sys'].forEach(k => $(k).addEventListener('change', () => { if (k === 'sort') AGE_SORT = null; render(); }));
+  $('out').addEventListener('click', ev => { if (ev.target.closest('[data-agesort]')) { AGE_SORT = AGE_SORT === null ? 'new' : AGE_SORT === 'new' ? 'old' : null; render(); } });
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
+  const v = META.game_versions && META.game_versions.live;
+  $('info').innerHTML = (v ? 'Parche <b>' + esc(v) + '</b> · ' : '') + 'datos de hace <b>' + ageText(EXTRA) + '</b> · <b>' + (META.fresh_under_24h_percent == null ? '?' : META.fresh_under_24h_percent) + '%</b> de los precios, de menos de 24 h';
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('c')) $('com').value = qs.get('c');
+  const m = qs.get('m') || load('sch_mode', 'routes');
+  setMode(SORTS[m] ? m : 'routes');
+}
+init();
+</script>
+</body>
+</html>
