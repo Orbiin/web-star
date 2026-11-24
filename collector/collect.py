@@ -411,6 +411,33 @@ def wiki_items():
     return cat, diag
 
 
+def wiki_probe():
+    """TEMPORAL: enseña la estructura de los recursos blueprints, missions y commodities de la wiki
+    (primer elemento, una ficha completa y los filtros disponibles). Se guarda en probe.json."""
+    res = {}
+    for r in ("blueprints", "missions", "commodities"):
+        out = {}
+        try:
+            body = wiki_get(r)
+            data, m = body.get("data") or [], body.get("meta") or {}
+            out["meta"] = {k: m.get(k) for k in ("current_page", "last_page", "per_page", "total")}
+            out["first"] = shape(data[0], 5) if data else None
+            ident = (data[0].get("uuid") or data[0].get("slug") or data[0].get("id")) if data else None
+            if ident:
+                d = wiki_get(r + "/" + str(ident)).get("data")
+                out["detail_keys"] = sorted(d) if isinstance(d, dict) else None
+                out["detail"] = shape(d, 5)
+        except Exception as e:
+            out["error"] = str(e)
+        try:
+            out["filters"] = shape(wiki_get(r + "/filters"), 3)
+        except Exception as e:
+            out["filters_error"] = str(e)
+        res[r] = out
+        time.sleep(1)
+    return res
+
+
 def norm(s):
     return re.sub(r"[^a-z0-9]", "", (s or "").lower())
 
@@ -484,6 +511,7 @@ def guides():
 
 PREV = os.environ.get("PREV_BASE", "").rstrip("/")       # donde esta publicada la web (datos de la vez anterior)
 FORCE = os.environ.get("FORCE_STATIC", "").lower() in ("1", "true", "yes")
+PROBE = os.environ.get("WIKI_PROBE", "").lower() in ("1", "true", "yes")   # TEMPORAL: sondeo de blueprints/misiones/mercancias
 REFRESH_EVERY_H = 6      # tras un parche nuevo, se vuelven a pedir los datos fijos cada 6 h...
 REFRESH_WINDOW_D = 3     # ...durante 3 dias, porque UEX tarda en actualizar los suyos
 
@@ -585,8 +613,12 @@ def main():
         (OUT / "guides.json").write_text(json.dumps(found, ensure_ascii=False), encoding="utf-8")
     except Exception as e:
         print("Guias no generadas:", e, file=sys.stderr)
-    for name, obj in (("commodities.json", data), ("meta.json", meta), ("ships.json", ship_data),
-                      ("shipdata.json", detail), ("items.json", items), ("static.json", state)):
+    probe = wiki_probe() if PROBE else prev_json("probe.json")     # persiste entre ejecuciones
+    files = [("commodities.json", data), ("meta.json", meta), ("ships.json", ship_data),
+             ("shipdata.json", detail), ("items.json", items), ("static.json", state)]
+    if probe:
+        files.append(("probe.json", probe))
+    for name, obj in files:
         tmp = OUT / (name + ".tmp")
         tmp.write_text(json.dumps(obj, ensure_ascii=False), encoding="utf-8")
         tmp.replace(OUT / name)
