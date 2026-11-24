@@ -7,6 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      probe:
+        description: "Sondeo temporal de blueprints, misiones y mercancias de la wiki (genera data/probe.json)"
+        type: boolean
+        default: false
       force_static:
         description: "Forzar la descarga de naves (normalmente solo con parche nuevo)"
         type: boolean
@@ -39,6 +43,7 @@ jobs:
         env:
           UEX_TOKEN: ${{ secrets.UEX_TOKEN }}
           FORCE_STATIC: ${{ inputs.force_static }}
+          WIKI_PROBE: ${{ inputs.probe }}
       - name: Copiar la web si existe
         run: if [ -d web ]; then cp -r web/. site/; fi
       - uses: actions/configure-pages@v6
