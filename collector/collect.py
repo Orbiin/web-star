@@ -412,29 +412,47 @@ def wiki_items():
 
 
 def wiki_probe():
-    """TEMPORAL: enseña la estructura de los recursos blueprints, missions y commodities de la wiki
-    (primer elemento, una ficha completa y los filtros disponibles). Se guarda en probe.json."""
+    """TEMPORAL (2a ronda): misiones que dan blueprint, una mercancia minable (Quantanium) y las facetas
+    completas de las mercancias. Se mezcla con lo que ya hubiera en probe.json."""
     res = {}
-    for r in ("blueprints", "missions", "commodities"):
-        out = {}
+    MKEYS = ["title", "mission_type", "mission_giver", "faction", "min_standing", "max_standing", "rank_index",
+             "reputation_prerequisite", "prerequisite_groups", "unlock_groups", "blueprints", "reward_min",
+             "reward_max", "reward_scope", "reward_groups", "reputation_gained", "star_systems", "illegal",
+             "has_combat", "version"]
+    try:
+        body = wiki_get("missions?filter%5Bhas_blueprints%5D=true")
+        data, m = body.get("data") or [], body.get("meta") or {}
+        out = {"meta": {k: m.get(k) for k in ("last_page", "per_page", "total")}, "details": []}
+        for it in data[:3]:
+            d = wiki_get("missions/" + str(it.get("uuid"))).get("data") or {}
+            fac = dict(d.get("faction") or {})
+            lad = fac.pop("reputation_ladder", None)
+            out["details"].append({"fields": {k: shape(d.get(k), 6) for k in MKEYS if k in d},
+                                   "ladder": shape(lad, 4) if not out.get("ladder") and lad else None})
+            out["ladder"] = out.get("ladder") or (shape(lad, 4) if lad else None)
+            time.sleep(1)
+        res["missions_bp"] = out
+    except Exception as e:
+        res["missions_bp"] = {"error": str(e)}
+    CKEYS = ["name", "tier", "is_mineable", "has_ship_mineables", "has_ground_vehicle_mineables", "has_fps_mineables",
+             "methods", "systems", "systems_grouped", "locations", "signature", "instability", "resistance",
+             "volatility", "raw_versions", "blueprints", "items", "uex_prices", "commodity_groups"]
+    try:
         try:
-            body = wiki_get(r)
-            data, m = body.get("data") or [], body.get("meta") or {}
-            out["meta"] = {k: m.get(k) for k in ("current_page", "last_page", "per_page", "total")}
-            out["first"] = shape(data[0], 5) if data else None
-            ident = (data[0].get("uuid") or data[0].get("slug") or data[0].get("id")) if data else None
-            if ident:
-                d = wiki_get(r + "/" + str(ident)).get("data")
-                out["detail_keys"] = sorted(d) if isinstance(d, dict) else None
-                out["detail"] = shape(d, 5)
-        except Exception as e:
-            out["error"] = str(e)
-        try:
-            out["filters"] = shape(wiki_get(r + "/filters"), 3)
-        except Exception as e:
-            out["filters_error"] = str(e)
-        res[r] = out
-        time.sleep(1)
+            d = wiki_get("commodities/quantanium").get("data") or {}
+        except Exception:
+            lst = wiki_get("commodities?filter%5Btype%5D=Asteroid").get("data") or [{}]
+            d = wiki_get("commodities/" + str(lst[0].get("uuid"))).get("data") or {}
+        res["quantanium"] = {k: shape(d.get(k), 6) for k in CKEYS if k in d}
+    except Exception as e:
+        res["quantanium"] = {"error": str(e)}
+    try:
+        f = (wiki_get("commodities/filters").get("filters") or {})
+        res["commodity_facets"] = {k: [(x.get("value"), x.get("count")) for x in v][:40] for k, v in f.items()}
+        t = wiki_get("commodities?filter%5Btype%5D=Asteroid").get("meta") or {}
+        res["asteroid_total"] = t.get("total")
+    except Exception as e:
+        res["commodity_facets"] = {"error": str(e)}
     return res
 
 
@@ -613,7 +631,8 @@ def main():
         (OUT / "guides.json").write_text(json.dumps(found, ensure_ascii=False), encoding="utf-8")
     except Exception as e:
         print("Guias no generadas:", e, file=sys.stderr)
-    probe = wiki_probe() if PROBE else prev_json("probe.json")     # persiste entre ejecuciones
+    old_probe = prev_json("probe.json") or {}
+    probe = dict(old_probe, **wiki_probe()) if PROBE else old_probe     # persiste y acumula entre ejecuciones
     files = [("commodities.json", data), ("meta.json", meta), ("ships.json", ship_data),
              ("shipdata.json", detail), ("items.json", items), ("static.json", state)]
     if probe:
