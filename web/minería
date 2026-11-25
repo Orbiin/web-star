@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>SC HUB · Minería</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="nav.js" defer></script>
+<style>
+:root{--bg:#060b11;--panel:#0f1b25;--line:#1a3544;--txt:#d6e4ee;--mut:#8aa0b2;--cy:#3fd6e8;--gr:#4fd68a;--am:#ffb43a;--rd:#ff6b5e}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 80% 0,rgba(122,77,255,.12),transparent 40%),radial-gradient(circle at 10% 90%,rgba(63,214,232,.09),transparent 40%),var(--bg);color:var(--txt);font-family:'Chakra Petch',system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:20px}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--cy);box-shadow:0 8px 20px -14px var(--cy)}
+.logo{font-size:20px;font-weight:700;letter-spacing:.14em;color:var(--cy);text-shadow:0 0 14px var(--cy)}
+.sortb{background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:0}
+.sortb:hover,.sortb:focus-visible{color:#fff;text-shadow:0 0 8px var(--cy)}
+#nav{display:contents}
+.nl{padding:8px 14px;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;text-decoration:none;font-size:14px}
+.nl.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12)}
+.info{margin-left:auto;font-size:13px;color:var(--mut)}
+.info b{font-family:'JetBrains Mono',monospace;color:var(--txt)}
+h1{margin:22px 0 6px;font-size:34px;text-shadow:0 0 24px rgba(63,214,232,.4)}
+.sub{margin:0 0 18px;color:var(--mut)}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:18px}
+label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+input,select{height:44px;padding:0 12px;background:#08111a;border:1px solid #1d5b69;border-radius:6px;color:var(--txt);font-family:inherit;font-size:15px}
+input:focus,select:focus{outline:2px solid var(--cy)}
+.card{background:linear-gradient(180deg,#0f1b25,#0a131b);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:980px}
+th{padding:11px 12px;text-align:left;font:600 11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);background:rgba(63,214,232,.07);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid #16303d;font-size:14px;vertical-align:top}
+tr:first-child td{background:rgba(63,214,232,.08)}
+.n{font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.m{color:var(--mut);font-size:12px}
+.g{color:var(--gr)}.a{color:var(--am)}.r{color:var(--rd)}
+.empty{padding:30px;text-align:center;color:var(--mut)}
+footer{margin:22px 0;color:var(--mut);font-size:12px;line-height:1.6}
+a{color:var(--cy)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.tab{min-height:44px;padding:0 20px;background:#0d1a24;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;font-family:inherit;font-size:15px;cursor:pointer}
+.tab.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12);text-shadow:0 0 10px var(--cy)}
+.note{font-size:12px;color:var(--am)}
+
+/* ---- móvil: las tablas pasan a tarjetas para ver los datos clave sin deslizar ---- */
+.mobbar{display:none}
+@media(max-width:760px){
+  .mobbar{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--mut);font-size:13px}
+  table.cards{min-width:0!important;width:100%}
+  table.cards thead{display:none}
+  table.cards tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  table.cards td{display:block;padding:0;border:0;white-space:normal}
+  table.cards td::before{content:attr(data-label);display:block;font:10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
+  table.cards td.full{grid-column:1/-1}
+  table.cards td.nolabel::before{display:none}
+  table.cards td.nolabel{font-size:16px}
+  table.cards tr:first-child td{background:none}
+  table.cards tbody tr:first-child{background:rgba(63,214,232,.08)}
+  table.routes td{order:2}
+  table.routes td:nth-child(1){order:0}
+  table.routes td:nth-child(9){order:1;grid-column:1/-1;font-size:18px}
+}
+
+.wrap{max-width:1280px}
+.ac-bp{--ac:#4fd68a;--acr:79,214,138}.ac-ms{--ac:#ffb43a;--acr:255,180,58}.ac-mn{--ac:#a66bff;--acr:166,107,255}
+.item{background:linear-gradient(180deg,rgba(var(--acr),.09),#0b141c 65%);border:1px solid rgba(var(--acr),.35);border-left:4px solid var(--ac);border-radius:8px;padding:14px 16px;margin-bottom:12px}
+.item h3{margin:0;font-size:17px}
+.ih{display:flex;flex-wrap:wrap;gap:10px;align-items:center;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{padding:4px 10px;border-radius:14px;font-size:12px;border:1px solid #24465a;background:#0d1a24;color:#c8dae6;text-decoration:none}
+.chip.g{border-color:#1d6a45;color:#8fe3b3}.chip.a{border-color:#5a4318;color:#ffcf7a}.chip.r{border-color:#6a2a24;color:#ff9a90}.chip.c{border-color:#1d5b69;color:#9fe9f3}.chip.p{border-color:#4a3a7a;color:#c9b3ff}
+a.chip:hover{border-color:var(--cy);color:#fff}
+.stat{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:0 0 16px;font-size:14px}
+.bar{height:8px;border-radius:4px;background:#16303d;overflow:hidden;flex:1 1 200px;max-width:360px}.bar i{display:block;height:100%;background:var(--gr)}
+.mrow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:9px 0;border-top:1px solid #16303d;font-size:14px}
+.more{display:block;margin:14px auto 0;min-height:44px;padding:0 22px;background:transparent;border:1px solid #1d5b69;color:var(--cy);border-radius:6px;font-family:inherit;font-size:14px;cursor:pointer}
+.ck{width:22px;height:22px;accent-color:#4fd68a;flex:0 0 auto}
+.req{margin-left:auto;text-align:right;font-size:13px}.req b{display:block;font-size:15px}
+.note{font-size:12px;color:var(--mut);line-height:1.5}
+.pool{margin-top:10px;padding-top:8px;border-top:1px dashed #24465a}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><span class="logo">SC HUB</span><span id="nav"></span><span class="info" id="info">Cargando…</span></div>
+<h1>Minería</h1>
+<p class="sub">Dónde aparece cada mineral y con qué probabilidad y calidad.</p>
+<div class="tabs" style="display:flex;gap:8px;margin:0 0 18px"><button class="tab on" data-m="min">Por mineral</button><button class="tab" data-m="loc">Por ubicación</button></div>
+<div class="filters">
+<div id="f-min"><label for="mi">Mineral</label><select id="mi" style="min-width:230px"></select></div>
+<div id="f-loc" hidden><label for="lo">Ubicación</label><select id="lo" style="min-width:230px"></select></div>
+<div><label for="sy">Sistema</label><select id="sy"><option value="">Todos</option></select></div>
+<div><label for="ki">Tipo</label><select id="ki"><option value="">Todos</option><option value="mineable">Minables</option><option value="harvestable">Recolectables</option></select></div>
+<div><label for="so">Ordenar por</label><select id="so"><option value="comb">Mejor combinada</option><option value="gp">Prob. del grupo</option><option value="rp">Prob. relativa</option><option value="q">Calidad máxima</option></select></div>
+</div>
+<div id="head"></div>
+<section class="card"><div class="scroll" id="out"><p class="empty">Cargando datos…</p></div></section>
+<p class="note" style="margin-top:14px">Probabilidades según la wiki: <b>grupo</b> es la probabilidad de que la ubicación genere ese grupo de rocas y <b>relativa</b> la de este mineral dentro del grupo. La <b>combinada</b> es el producto de ambas, una aproximación para comparar ubicaciones. La calidad va de 0 a 1.000.</p>
+<footer>Web privada y no oficial de la comunidad. Star Citizen es una marca de Cloud Imperium Rights LLC. Datos de la <a href="https://api.star-citizen.wiki" target="_blank" rel="noopener">Star Citizen Wiki API</a> y precios de <a href="https://uexcorp.space" target="_blank" rel="noopener">UEX Corp</a>.</footer>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 0});
+const n2 = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 2});
+const n1 = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 1});
+function load(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+async function get(n) { try { const r = await fetch('data/' + n, {cache: 'no-store'}); if (!r.ok) throw new Error(); return await r.json(); } catch (e) { return null; } }
+const uniq = a => [...new Set(a.filter(x => x != null && x !== ''))].sort((x, y) => String(x).localeCompare(String(y)));
+const opts = (id, list) => list.forEach(v => $(id).insertAdjacentHTML('beforeend', '<option>' + esc(v) + '</option>'));
+const rankTxt = m => m.min && m.min[0] ? esc(m.min[0]) + ' <span class="m">(' + fmt(m.min[1] || 0) + ' pts)</span>' : '—';
+let MIN = [], CM = null, MODE = 'min';
+const METH = {Ship: 'Nave', 'Ground Vehicle': 'Vehículo terrestre', FPS: 'A pie', Hand: 'A pie'};
+const TIER = {common: 'Común', uncommon: 'Poco común', rare: 'Raro', epic: 'Épico', legendary: 'Legendario'};
+const comb = l => (l.gp != null && l.rp != null) ? l.gp * l.rp / 100 : null;
+function sellInfo(m) {
+  const base = (m.name || '').replace(/\s*\((Ore|Raw)\)\s*$/i, '').toLowerCase();
+  const c = CM && CM.commodities.find(x => x.name.toLowerCase() === base);
+  const s = c && c.sell.filter(e => !e.no_demand).sort((a, b) => b.price - a.price)[0];
+  return s ? 'Refinado se vende hasta a <b>' + fmt(s.price) + '</b> aUEC/SCU en ' + esc(s.terminal) + ' · <a href="comercio.html?m=sell&c=' + encodeURIComponent(c.name) + '">ver todos los precios</a>' : '';
+}
+function rowsFor(list, sort) {
+  const k = {comb: comb, gp: l => l.gp, rp: l => l.rp, q: l => l.q && l.q[1]}[sort];
+  return list.sort((a, b) => (k(b) == null ? -1 : k(b)) - (k(a) == null ? -1 : k(a)));
+}
+function table(rows, firstCol) {
+  if (!rows.length) return '<p class="empty">No hay datos con estos filtros.</p>';
+  const T = {Asteroid: 'Asteroide', Moon: 'Luna', Planet: 'Planeta', Star: 'Estrella', Outpost: 'Puesto'};
+  return '<table class="cards" style="min-width:760px"><thead><tr><th>' + firstCol + '</th><th>Sistema</th><th>Ubicación</th><th>Tipo</th><th>Grupo %</th><th>Relativa %</th><th>Combinada %</th><th>Calidad</th><th>Racimo</th></tr></thead><tbody>' +
+    rows.map(r => '<tr><td class="full nolabel" data-label="' + firstCol + '"><b>' + esc(r.first) + '</b></td><td data-label="Sistema">' + esc((r.l.sys || '').replace(' System', '')) + '</td><td data-label="Ubicación">' + esc(r.l.loc) + '</td><td class="m" data-label="Tipo">' + esc(T[r.l.type] || r.l.type || '') + '</td><td class="n" data-label="Grupo %">' + (r.l.gp == null ? '—' : n1(r.l.gp)) + '</td><td class="n" data-label="Relativa %">' + (r.l.rp == null ? '—' : n1(r.l.rp)) + '</td><td class="n g" data-label="Combinada %"><b>' + (comb(r.l) == null ? '—' : n2(comb(r.l))) + '</b></td><td class="n" data-label="Calidad">' + (r.l.q && r.l.q[0] != null ? fmt(r.l.q[0]) + '–' + fmt(r.l.q[1]) : '—') + '</td><td class="n" data-label="Racimo">' + (r.l.cl && r.l.cl[0] != null ? r.l.cl[0] + '–' + r.l.cl[1] : '—') + '</td></tr>').join('') + '</tbody></table>';
+}
+function render() {
+  ['mi', 'lo', 'sy', 'ki', 'so'].forEach(k => save('mn_' + k, $(k).value));
+  const sy = $('sy').value, ki = $('ki').value, so = $('so').value;
+  $('f-min').hidden = MODE !== 'min'; $('f-loc').hidden = MODE !== 'loc';
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.m === MODE));
+  if (MODE === 'min') {
+    const m = MIN.find(x => x.id === $('mi').value) || MIN[0];
+    if (!m) { $('out').innerHTML = '<p class="empty">Sin datos.</p>'; $('head').innerHTML = ''; return; }
+    const si = sellInfo(m);
+    $('head').innerHTML = '<section class="card ac-mn" style="margin-bottom:16px"><div class="bd" style="padding:16px 18px"><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><h2 style="margin:0;font-size:24px">' + esc(m.name) + '</h2>' + (m.tier ? '<span class="chip p">' + esc(TIER[m.tier] || m.tier) + '</span>' : '') + '<span class="chip">' + (m.kind === 'harvestable' ? 'Recolectable' : 'Minable') + '</span>' + m.methods.map(x => '<span class="chip c">' + esc(METH[x] || x) + '</span>').join('') + '</div>' +
+      '<div class="chips">' + (m.sig ? '<span class="chip">Firma ' + fmt(m.sig) + '</span>' : '') + (m.inst != null ? '<span class="chip">Inestabilidad ' + n1(m.inst) + '</span>' : '') + (m.res != null ? '<span class="chip">Resistencia ' + n2(m.res) + '</span>' : '') + m.groups.map(g => '<span class="chip">' + esc(g) + '</span>').join('') + '</div>' + (si ? '<p style="margin:10px 0 0;font-size:14px">' + si + '</p>' : '') + '</div></section>';
+    const rows = rowsFor(m.locs.filter(l => (!sy || l.sys === sy)).map(l => ({l, first: m.name})), so === 'comb' ? 'comb' : so);
+    $('out').innerHTML = table(rows.map(r => ({l: r.l, first: r.l.loc})), 'Ubicación').replace('<th>Ubicación</th><th>Sistema</th><th>Ubicación</th>', '<th>Ubicación</th><th>Sistema</th><th>Tipo de lugar</th>');
+  } else {
+    const loc = $('lo').value; $('head').innerHTML = '';
+    const rows = []; MIN.forEach(m => { if (ki && m.kind !== ki) return; m.locs.forEach(l => { if (l.loc === loc && (!sy || l.sys === sy)) rows.push({l, first: m.name}); }); });
+    $('out').innerHTML = table(rowsFor(rows, so), 'Mineral');
+  }
+}
+async function init() {
+  const [d, c] = await Promise.all([get('mining.json'), get('commodities.json')]);
+  CM = c;
+  if (!d || !d.minerals) { $('out').innerHTML = '<p class="empty">Los datos de minería todavía no están disponibles. Se descargan con cada parche; inténtalo en un rato.</p>'; $('info').textContent = 'Sin datos'; return; }
+  MIN = d.minerals;
+  const fill = () => { const ki = $('ki').value, prev = $('mi').value; $('mi').innerHTML = MIN.filter(m => !ki || m.kind === ki).map(m => '<option value="' + esc(m.id) + '">' + esc(m.name) + '</option>').join(''); if ([...$('mi').options].some(o => o.value === prev)) $('mi').value = prev; };
+  opts('sy', uniq(MIN.flatMap(m => m.locs.map(l => l.sys)))); fill();
+  $('lo').innerHTML = uniq(MIN.flatMap(m => m.locs.map(l => l.loc))).map(v => '<option>' + esc(v) + '</option>').join('');
+  ['sy', 'ki', 'so', 'lo'].forEach(k => { const v = load('mn_' + k, null); if (v !== null) $(k).value = v; }); fill();
+  const mv = load('mn_mi', null); if (mv && [...$('mi').options].some(o => o.value === mv)) $('mi').value = mv;
+  const qm = new URLSearchParams(location.search).get('m');
+  if (qm) { const f = MIN.find(x => (x.name || '').toLowerCase().startsWith(qm.toLowerCase())); if (f) { $('ki').value = ''; fill(); $('mi').value = f.id; } }
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { MODE = b.dataset.m; render(); }));
+  ['mi', 'lo', 'sy', 'so'].forEach(k => $(k).addEventListener('change', render));
+  $('ki').addEventListener('change', () => { fill(); render(); });
+  $('info').innerHTML = fmt(MIN.length) + ' minerales · ' + fmt(MIN.reduce((a, m) => a + m.locs.length, 0)) + ' puntos de aparición';
+  render();
+}
+init();
+</script>
+</body>
+</html>
