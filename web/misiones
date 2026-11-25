@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>SC HUB · Misiones</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="nav.js" defer></script>
+<style>
+:root{--bg:#060b11;--panel:#0f1b25;--line:#1a3544;--txt:#d6e4ee;--mut:#8aa0b2;--cy:#3fd6e8;--gr:#4fd68a;--am:#ffb43a;--rd:#ff6b5e}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 80% 0,rgba(122,77,255,.12),transparent 40%),radial-gradient(circle at 10% 90%,rgba(63,214,232,.09),transparent 40%),var(--bg);color:var(--txt);font-family:'Chakra Petch',system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:20px}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--cy);box-shadow:0 8px 20px -14px var(--cy)}
+.logo{font-size:20px;font-weight:700;letter-spacing:.14em;color:var(--cy);text-shadow:0 0 14px var(--cy)}
+.sortb{background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:0}
+.sortb:hover,.sortb:focus-visible{color:#fff;text-shadow:0 0 8px var(--cy)}
+#nav{display:contents}
+.nl{padding:8px 14px;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;text-decoration:none;font-size:14px}
+.nl.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12)}
+.info{margin-left:auto;font-size:13px;color:var(--mut)}
+.info b{font-family:'JetBrains Mono',monospace;color:var(--txt)}
+h1{margin:22px 0 6px;font-size:34px;text-shadow:0 0 24px rgba(63,214,232,.4)}
+.sub{margin:0 0 18px;color:var(--mut)}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:18px}
+label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+input,select{height:44px;padding:0 12px;background:#08111a;border:1px solid #1d5b69;border-radius:6px;color:var(--txt);font-family:inherit;font-size:15px}
+input:focus,select:focus{outline:2px solid var(--cy)}
+.card{background:linear-gradient(180deg,#0f1b25,#0a131b);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:980px}
+th{padding:11px 12px;text-align:left;font:600 11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);background:rgba(63,214,232,.07);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid #16303d;font-size:14px;vertical-align:top}
+tr:first-child td{background:rgba(63,214,232,.08)}
+.n{font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.m{color:var(--mut);font-size:12px}
+.g{color:var(--gr)}.a{color:var(--am)}.r{color:var(--rd)}
+.empty{padding:30px;text-align:center;color:var(--mut)}
+footer{margin:22px 0;color:var(--mut);font-size:12px;line-height:1.6}
+a{color:var(--cy)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.tab{min-height:44px;padding:0 20px;background:#0d1a24;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;font-family:inherit;font-size:15px;cursor:pointer}
+.tab.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12);text-shadow:0 0 10px var(--cy)}
+.note{font-size:12px;color:var(--am)}
+
+/* ---- móvil: las tablas pasan a tarjetas para ver los datos clave sin deslizar ---- */
+.mobbar{display:none}
+@media(max-width:760px){
+  .mobbar{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--mut);font-size:13px}
+  table.cards{min-width:0!important;width:100%}
+  table.cards thead{display:none}
+  table.cards tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  table.cards td{display:block;padding:0;border:0;white-space:normal}
+  table.cards td::before{content:attr(data-label);display:block;font:10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
+  table.cards td.full{grid-column:1/-1}
+  table.cards td.nolabel::before{display:none}
+  table.cards td.nolabel{font-size:16px}
+  table.cards tr:first-child td{background:none}
+  table.cards tbody tr:first-child{background:rgba(63,214,232,.08)}
+  table.routes td{order:2}
+  table.routes td:nth-child(1){order:0}
+  table.routes td:nth-child(9){order:1;grid-column:1/-1;font-size:18px}
+}
+
+.wrap{max-width:1280px}
+.ac-bp{--ac:#4fd68a;--acr:79,214,138}.ac-ms{--ac:#ffb43a;--acr:255,180,58}.ac-mn{--ac:#a66bff;--acr:166,107,255}
+.item{background:linear-gradient(180deg,rgba(var(--acr),.09),#0b141c 65%);border:1px solid rgba(var(--acr),.35);border-left:4px solid var(--ac);border-radius:8px;padding:14px 16px;margin-bottom:12px}
+.item h3{margin:0;font-size:17px}
+.ih{display:flex;flex-wrap:wrap;gap:10px;align-items:center;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{padding:4px 10px;border-radius:14px;font-size:12px;border:1px solid #24465a;background:#0d1a24;color:#c8dae6;text-decoration:none}
+.chip.g{border-color:#1d6a45;color:#8fe3b3}.chip.a{border-color:#5a4318;color:#ffcf7a}.chip.r{border-color:#6a2a24;color:#ff9a90}.chip.c{border-color:#1d5b69;color:#9fe9f3}.chip.p{border-color:#4a3a7a;color:#c9b3ff}
+a.chip:hover{border-color:var(--cy);color:#fff}
+.stat{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:0 0 16px;font-size:14px}
+.bar{height:8px;border-radius:4px;background:#16303d;overflow:hidden;flex:1 1 200px;max-width:360px}.bar i{display:block;height:100%;background:var(--gr)}
+.mrow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:9px 0;border-top:1px solid #16303d;font-size:14px}
+.more{display:block;margin:14px auto 0;min-height:44px;padding:0 22px;background:transparent;border:1px solid #1d5b69;color:var(--cy);border-radius:6px;font-family:inherit;font-size:14px;cursor:pointer}
+.ck{width:22px;height:22px;accent-color:#4fd68a;flex:0 0 auto}
+.req{margin-left:auto;text-align:right;font-size:13px}.req b{display:block;font-size:15px}
+.note{font-size:12px;color:var(--mut);line-height:1.5}
+.pool{margin-top:10px;padding-top:8px;border-top:1px dashed #24465a}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><span class="logo">SC HUB</span><span id="nav"></span><span class="info" id="info">Cargando…</span></div>
+<h1>Misiones</h1>
+<p class="sub">Misiones que dan blueprint: qué reputación necesitas y qué planos puedes conseguir.</p>
+<div class="filters">
+<div><label for="q">Buscar</label><input id="q" placeholder="Misión, quien la da o plano…" style="width:260px" autocomplete="off"></div>
+<div><label for="fa">Facción</label><select id="fa"><option value="">Todas</option></select></div>
+<div><label for="sy">Sistema</label><select id="sy"><option value="">Todos</option></select></div>
+<div><label for="ty">Tipo</label><select id="ty"><option value="">Todos</option></select></div>
+<div><label for="il">Legalidad</label><select id="il"><option value="">Todas</option><option value="0">Legales</option><option value="1">Ilegales</option></select></div>
+<div><label for="so">Ordenar por</label><select id="so"><option value="rank">Facción y rango</option><option value="name">Nombre</option><option value="pool">Más planos</option><option value="reward">Recompensa</option></select></div>
+<div id="myrep" hidden><label for="my">Mi rango en esta facción</label><select id="my"></select></div>
+<div id="canbox" hidden><label for="can">Solo las que puedo hacer</label><select id="can"><option value="">No</option><option value="1">Sí</option></select></div>
+</div>
+<div class="stat" id="stat"></div>
+<div id="out"><p class="empty">Cargando datos…</p></div>
+<footer>Web privada y no oficial de la comunidad. Star Citizen es una marca de Cloud Imperium Rights LLC. Datos de la <a href="https://api.star-citizen.wiki" target="_blank" rel="noopener">Star Citizen Wiki API</a>.</footer>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 0});
+const n2 = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 2});
+const n1 = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 1});
+function load(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+async function get(n) { try { const r = await fetch('data/' + n, {cache: 'no-store'}); if (!r.ok) throw new Error(); return await r.json(); } catch (e) { return null; } }
+const uniq = a => [...new Set(a.filter(x => x != null && x !== ''))].sort((x, y) => String(x).localeCompare(String(y)));
+const opts = (id, list) => list.forEach(v => $(id).insertAdjacentHTML('beforeend', '<option>' + esc(v) + '</option>'));
+const rankTxt = m => m.min && m.min[0] ? esc(m.min[0]) + ' <span class="m">(' + fmt(m.min[1] || 0) + ' pts)</span>' : '—';
+let MS = [], LAD = {}, SHOW = 40; const OPEN = new Set();
+const myRep = fa => { const i = Number(load('rep_' + fa, -1)); const l = LAD[fa]; return l && i >= 0 && l[i] ? l[i][1] : null; };
+function render() {
+  ['q', 'fa', 'sy', 'ty', 'il', 'so'].forEach(k => save('ms_' + k, $(k).value));
+  const q = $('q').value.trim().toLowerCase(), fa = $('fa').value, sy = $('sy').value, ty = $('ty').value, il = $('il').value, so = $('so').value;
+  const lad = fa ? LAD[fa] : null;
+  $('myrep').hidden = !lad;
+  if (lad) { $('my').innerHTML = '<option value="-1">Sin indicar</option>' + lad.map((r, i) => '<option value="' + i + '">' + esc(r[0]) + ' (' + fmt(r[1]) + ')</option>').join(''); $('my').value = load('rep_' + fa, '-1'); }
+  $('canbox').hidden = !lad;
+  const mine = fa ? myRep(fa) : null, can = lad && $('can').value === '1' && mine != null;
+  let list = MS.filter(m => (!q || ((m.title || '') + ' ' + (m.giver || '') + ' ' + m.pools.map(p => p.items.map(i => i.n).join(' ')).join(' ')).toLowerCase().includes(q)) &&
+    (!fa || m.faction === fa) && (!sy || m.systems.includes(sy)) && (!ty || m.type === ty) && (!il || (il === '1') === m.illegal) && (!can || (m.min[1] || 0) <= mine));
+  const cnt = m => m.pools.reduce((a, p) => a + p.items.length, 0);
+  if (so === 'name') list.sort((a, b) => (a.title || '').localeCompare(b.title || '')); else if (so === 'pool') list.sort((a, b) => cnt(b) - cnt(a)); else if (so === 'reward') list.sort((a, b) => (b.reward[1] || b.reward[0] || 0) - (a.reward[1] || a.reward[0] || 0));
+  $('stat').innerHTML = '<span><b>' + fmt(list.length) + '</b> misiones</span><span class="note">Un plano sale al azar de su lista: la probabilidad indicada es la de recibir uno de ellos.</span>';
+  if (!list.length) { $('out').innerHTML = '<p class="empty">Ninguna misión coincide con estos filtros.</p>'; return; }
+  $('out').innerHTML = list.slice(0, SHOW).map((m, i) => {
+    const key = m.id || i, open = OPEN.has(key), ok = mine != null && (m.min[1] || 0) <= mine;
+    const rw = m.reward[0] || m.reward[1] ? fmt(m.reward[0] || 0) + (m.reward[1] ? '–' + fmt(m.reward[1]) : '') + ' ' + esc(m.reward[2] || 'aUEC') : null;
+    const pools = m.pools.map(p => { const sh = open ? p.items : p.items.slice(0, 8); return '<div class="pool"><span class="chip c">' + (p.p == null ? '?' : p.p) + ' % de recibir 1 de ' + p.items.length + ' planos</span><div class="chips">' + sh.map(it => '<a class="chip" href="blueprints.html?q=' + encodeURIComponent(it.n || '') + '">' + esc(it.n) + '</a>').join('') + (!open && p.items.length > 8 ? '<span class="chip">+' + (p.items.length - 8) + ' más</span>' : '') + '</div></div>'; }).join('');
+    return '<article class="item ac-ms"><div class="ih" data-open="' + esc(key) + '"><div><h3>' + esc(m.title) + '</h3><div class="m" style="font-size:13px">' + esc(m.giver || '') + ' · ' + esc(m.faction || '') + '</div></div>' +
+      '<div class="req"><span class="m">Reputación necesaria</span><b>' + rankTxt(m) + '</b>' + (mine == null ? '' : ok ? '<span style="color:var(--gr)">✔ Cumples</span>' : '<span style="color:var(--rd)">✖ Te falta</span>') + '</div></div>' +
+      '<div class="chips"><span class="chip p">' + esc(m.type || '—') + '</span>' + (m.illegal ? '<span class="chip r">Ilegal</span>' : '<span class="chip g">Legal</span>') + (m.combat ? '<span class="chip a">Combate</span>' : '') + m.systems.map(s => '<span class="chip c">' + esc(s) + '</span>').join('') + (rw ? '<span class="chip a">' + rw + '</span>' : '') + (m.prereq ? '<span class="chip a">Tiene requisitos previos</span>' : '') + (m.variants > 1 ? '<span class="chip">' + m.variants + ' variantes</span>' : '') + '</div>' + pools + '</article>';
+  }).join('') + (list.length > SHOW ? '<button class="more" id="more">Mostrar más (' + fmt(list.length - SHOW) + ' restantes)</button>' : '');
+}
+async function init() {
+  const d = await get('missions.json');
+  if (!d || !d.missions) { $('out').innerHTML = '<p class="empty">Los datos de misiones todavía no están disponibles. Se descargan con cada parche; inténtalo en un rato.</p>'; $('info').textContent = 'Sin datos'; return; }
+  MS = d.missions; LAD = d.ladders || {};
+  opts('fa', uniq(MS.map(m => m.faction))); opts('sy', uniq(MS.flatMap(m => m.systems))); opts('ty', uniq(MS.map(m => m.type)));
+  ['q', 'fa', 'sy', 'ty', 'il', 'so'].forEach(k => { const v = load('ms_' + k, null); if (v !== null) $(k).value = v; });
+  const qq = new URLSearchParams(location.search).get('q'); if (qq) $('q').value = qq;
+  $('q').addEventListener('input', () => { SHOW = 40; render(); });
+  ['fa', 'sy', 'ty', 'il', 'so', 'can'].forEach(k => $(k).addEventListener('change', () => { SHOW = 40; render(); }));
+  $('my').addEventListener('change', () => { save('rep_' + $('fa').value, $('my').value); render(); });
+  $('out').addEventListener('click', ev => {
+    if (ev.target.closest('#more')) { SHOW += 40; return render(); }
+    if (ev.target.closest('a')) return;
+    const h = ev.target.closest('[data-open]'); if (h) { const id = h.dataset.open; if (OPEN.has(id)) OPEN.delete(id); else OPEN.add(id); render(); }
+  });
+  $('info').innerHTML = fmt(MS.length) + ' misiones con plano · versión ' + esc((d.generated_at || '').slice(0, 10));
+  render();
+}
+init();
+</script>
+</body>
+</html>
