@@ -411,49 +411,134 @@ def wiki_items():
     return cat, diag
 
 
-def wiki_probe():
-    """TEMPORAL (2a ronda): misiones que dan blueprint, una mercancia minable (Quantanium) y las facetas
-    completas de las mercancias. Se mezcla con lo que ya hubiera en probe.json."""
-    res = {}
-    MKEYS = ["title", "mission_type", "mission_giver", "faction", "min_standing", "max_standing", "rank_index",
-             "reputation_prerequisite", "prerequisite_groups", "unlock_groups", "blueprints", "reward_min",
-             "reward_max", "reward_scope", "reward_groups", "reputation_gained", "star_systems", "illegal",
-             "has_combat", "version"]
-    try:
-        body = wiki_get("missions?filter%5Bhas_blueprints%5D=true")
-        data, m = body.get("data") or [], body.get("meta") or {}
-        out = {"meta": {k: m.get(k) for k in ("last_page", "per_page", "total")}, "details": []}
-        for it in data[:3]:
-            d = wiki_get("missions/" + str(it.get("uuid"))).get("data") or {}
-            fac = dict(d.get("faction") or {})
-            lad = fac.pop("reputation_ladder", None)
-            out["details"].append({"fields": {k: shape(d.get(k), 6) for k in MKEYS if k in d},
-                                   "ladder": shape(lad, 4) if not out.get("ladder") and lad else None})
-            out["ladder"] = out.get("ladder") or (shape(lad, 4) if lad else None)
-            time.sleep(1)
-        res["missions_bp"] = out
-    except Exception as e:
-        res["missions_bp"] = {"error": str(e)}
-    CKEYS = ["name", "tier", "is_mineable", "has_ship_mineables", "has_ground_vehicle_mineables", "has_fps_mineables",
-             "methods", "systems", "systems_grouped", "locations", "signature", "instability", "resistance",
-             "volatility", "raw_versions", "blueprints", "items", "uex_prices", "commodity_groups"]
-    try:
+def wiki_pages(path, params="", max_pages=80):
+    """Recorre todas las paginas de un recurso de la wiki. Devuelve (elementos, paginas fallidas)."""
+    out, page, last, failed = [], 1, 1, 0
+    sep = "&" if "?" in path else "?"
+    while page <= min(last, max_pages):
         try:
-            d = wiki_get("commodities/quantanium").get("data") or {}
-        except Exception:
-            lst = wiki_get("commodities?filter%5Btype%5D=Asteroid").get("data") or [{}]
-            d = wiki_get("commodities/" + str(lst[0].get("uuid"))).get("data") or {}
-        res["quantanium"] = {k: shape(d.get(k), 6) for k in CKEYS if k in d}
-    except Exception as e:
-        res["quantanium"] = {"error": str(e)}
-    try:
-        f = (wiki_get("commodities/filters").get("filters") or {})
-        res["commodity_facets"] = {k: [(x.get("value"), x.get("count")) for x in v][:40] for k, v in f.items()}
-        t = wiki_get("commodities?filter%5Btype%5D=Asteroid").get("meta") or {}
-        res["asteroid_total"] = t.get("total")
-    except Exception as e:
-        res["commodity_facets"] = {"error": str(e)}
-    return res
+            body = wiki_get(f"{path}{sep}page%5Bnumber%5D={page}{params}")
+            last = (body.get("meta") or {}).get("last_page", 1)
+            out.extend(body.get("data") or [])
+        except Exception as e:
+            failed += 1
+            print(f"Wiki {path} pagina {page} fallida: {e}", file=sys.stderr)
+        page += 1
+        time.sleep(1)
+    if not out or failed > max(2, last // 4):
+        raise RuntimeError(f"{path}: descarga incompleta ({len(out)} elementos, {failed} paginas fallidas)")
+    return out, failed
+
+
+UUID_RE = re.compile(r"/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})")
+
+
+def last_seg(url):
+    return (url or "").rstrip("/").rsplit("/", 1)[-1]
+
+
+def wiki_blueprints():
+    """Los ~1.600 blueprints: que fabrican, con que ingredientes y cuanto tardan."""
+    rows, failed = wiki_pages("blueprints")
+    out = []
+    for b in rows:
+        o = b.get("output") or {}
+        out.append({"id": b.get("uuid"), "name": b.get("output_name"), "type": o.get("type"),
+                    "label": o.get("type_label"), "grade": o.get("grade"), "craft": b.get("craft_time_seconds"),
+                    "craft_label": b.get("craft_time_label"), "default": bool(b.get("is_available_by_default")),
+                    "n_missions": b.get("unlocking_missions_count"), "slug": last_seg(b.get("web_url")),
+                    "ing": [{"n": i.get("name"), "k": i.get("kind"), "scu": i.get("quantity_scu"), "q": i.get("quantity")}
+                            for i in (b.get("ingredients") or [])]})
+    out.sort(key=lambda x: (x["label"] or "", x["name"] or ""))
+    return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "blueprints": out}, \
+           {"count": len(out), "pages_failed": failed}
+
+
+def wiki_missions():
+    """Misiones que dan blueprint (ficha completa de cada una). Las variantes identicas se agrupan."""
+    rows, failed = wiki_pages("missions", "&filter%5Bhas_blueprints%5D=true")
+    groups, ladders, dfail = {}, {}, 0
+    for r in rows:
+        try:
+            d = wiki_get("missions/" + str(r.get("uuid"))).get("data") or {}
+        except Exception as e:
+            dfail += 1
+            print(f"Mision {r.get('uuid')} fallida: {e}", file=sys.stderr)
+            continue
+        finally:
+            time.sleep(1.1)
+        pools = []
+        for pl in d.get("blueprints") or []:
+            items = []
+            for it in pl.get("items") or []:
+                m = UUID_RE.search(it.get("blueprint_link") or "")
+                items.append({"n": it.get("name"), "id": m.group(1) if m else None,
+                              "slug": last_seg(it.get("web_blueprint_link"))})
+            pools.append({"p": pl.get("drop_chance_percent"), "items": items})
+        if not pools:
+            continue
+        fac = d.get("faction") or {}
+        lad = (fac.get("reputation_ladder") or {}).get("standings")
+        if fac.get("name") and lad and fac["name"] not in ladders:
+            ladders[fac["name"]] = [[x.get("display_name"), x.get("min_reputation")] for x in lad]
+        ms, xs = d.get("min_standing") or {}, d.get("max_standing") or {}
+        rep = (d.get("reputation_gained") or [{}])[0]
+        row = {"id": d.get("uuid"), "title": d.get("title"), "type": d.get("mission_type"), "giver": d.get("mission_giver"),
+               "faction": fac.get("name"), "lawful": fac.get("lawful"),
+               "min": [ms.get("name"), ms.get("min_reputation")], "max": [xs.get("name"), xs.get("min_reputation")],
+               "rank": d.get("rank_index"), "reward": [d.get("reward_min"), d.get("reward_max"), d.get("reward_currency")],
+               "illegal": bool(d.get("illegal")), "combat": bool(d.get("has_combat")),
+               "systems": d.get("star_systems") or [], "gain": rep.get("amount"),
+               "prereq": bool(d.get("prerequisite_groups") or d.get("reputation_prerequisite")),
+               "unlock": len(d.get("unlock_groups") or []), "scope": d.get("reward_scope"), "pools": pools, "variants": 1}
+        key = json.dumps([row["title"], row["giver"], row["min"], pools], sort_keys=True)
+        if key in groups:
+            groups[key]["variants"] += 1
+            groups[key]["systems"] = sorted(set(groups[key]["systems"]) | set(row["systems"]))
+        else:
+            groups[key] = row
+    if not groups or dfail > max(5, len(rows) // 5):
+        raise RuntimeError(f"missions: {len(groups)} misiones, {dfail} fichas fallidas")
+    out = sorted(groups.values(), key=lambda m: ((m["faction"] or ""), (m["rank"] if m["rank"] is not None else 99), m["title"] or ""))
+    return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "missions": out, "ladders": ladders}, \
+           {"listed": len(rows), "missions": len(out), "details_failed": dfail}
+
+
+def wiki_mining():
+    """Minerales y recolectables: donde aparecen, con que probabilidad y que calidad."""
+    rows, failed = wiki_pages("commodities")
+    wanted = [x for x in rows if x.get("kind") in ("mineable", "harvestable") or x.get("is_mineable")]
+    out, dfail = [], 0
+    for x in wanted:
+        try:
+            d = wiki_get("commodities/" + str(x.get("uuid"))).get("data") or {}
+        except Exception as e:
+            dfail += 1
+            print(f"Mineral {x.get('name')} fallido: {e}", file=sys.stderr)
+            continue
+        finally:
+            time.sleep(1.1)
+        locs = []
+        for sysg in d.get("systems_grouped") or []:
+            for loc in sysg.get("locations") or []:
+                for res in (loc.get("resources") or [{}]):
+                    cl = res.get("clustering") or {}
+                    locs.append({"sys": sysg.get("name"), "loc": loc.get("display_name") or loc.get("name"),
+                                 "type": loc.get("type"), "parent": loc.get("parent_name"),
+                                 "gp": loc.get("group_probability_percent"),
+                                 "rp": res.get("relative_probability_percent", loc.get("relative_probability_percent")),
+                                 "q": [res.get("quality_min", loc.get("quality_min")), res.get("quality_max", loc.get("quality_max"))],
+                                 "cl": [cl.get("min_size"), cl.get("max_size")], "rk": res.get("resource_kind"),
+                                 "grp": res.get("group_name")})
+        out.append({"id": d.get("uuid") or x.get("uuid"), "name": d.get("name") or x.get("name"), "kind": x.get("kind"),
+                    "tier": d.get("tier"), "methods": d.get("methods") or [], "systems": d.get("systems") or [],
+                    "sig": d.get("signature"), "inst": d.get("instability"), "res": d.get("resistance"),
+                    "groups": d.get("commodity_groups") or [], "locs": locs})
+    if not out or dfail > max(3, len(wanted) // 4):
+        raise RuntimeError(f"mining: {len(out)} minerales, {dfail} fallidos")
+    out.sort(key=lambda m: m["name"] or "")
+    return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "minerals": out}, \
+           {"minerals": len(out), "locations": sum(len(m["locs"]) for m in out), "details_failed": dfail}
 
 
 def norm(s):
@@ -529,7 +614,6 @@ def guides():
 
 PREV = os.environ.get("PREV_BASE", "").rstrip("/")       # donde esta publicada la web (datos de la vez anterior)
 FORCE = os.environ.get("FORCE_STATIC", "").lower() in ("1", "true", "yes")
-PROBE = os.environ.get("WIKI_PROBE", "").lower() in ("1", "true", "yes")   # TEMPORAL: sondeo de blueprints/misiones/mercancias
 REFRESH_EVERY_H = 6      # tras un parche nuevo, se vuelven a pedir los datos fijos cada 6 h...
 REFRESH_WINDOW_D = 3     # ...durante 3 dias, porque UEX tarda en actualizar los suyos
 
@@ -547,59 +631,75 @@ def prev_json(name):
         return None
 
 
-SCHEMA = 3     # sube si cambia el formato de shipdata/items: fuerza una descarga nueva de la wiki
+SCHEMA = 4     # sube si cambia el formato de los datos de la wiki: fuerza una descarga nueva
+WIKI_FILES = ("shipdata.json", "items.json", "blueprints.json", "missions.json", "mining.json")
 
 
 def static_data(live, now, where):
-    """Naves (UEX) y fichas de la wiki: solo cambian con un parche, asi que solo se piden cuando toca.
-    UEX se refresca ademas cada 6 h durante 3 dias tras un parche; la wiki (mucho mas pesada) solo con el parche.
-    Devuelve (ships_json, detalle_json, catalogo_json, state, razon)."""
-    state, old_ships, old_detail, old_items = (prev_json("static.json"), prev_json("ships.json"),
-                                                prev_json("shipdata.json"), prev_json("items.json"))
-    have_all = bool(state and old_ships and old_detail and old_items)
+    """Naves (UEX) y datos de la wiki: solo cambian con un parche, asi que solo se piden cuando toca.
+    UEX se refresca ademas cada 6 h durante 3 dias tras un parche; la wiki (mucho mas pesada) solo con el parche
+    (o si un bloque fallo, un reintento cada 6 h).
+    Devuelve (ships_json, {archivo: datos de la wiki}, state, razon)."""
+    state, old_ships = prev_json("static.json"), prev_json("ships.json")
+    old = {n: prev_json(n) for n in WIKI_FILES}
+    have_all = bool(state and old_ships and all(old.values()))
     changed = bool(live) and (not state or state.get("version") != live)
     first_seen = now if (changed or not state) else state.get("first_seen", now)
     last = (state or {}).get("fetched_at", 0)
     window = now - first_seen < REFRESH_WINDOW_D * 86400 and now - last > REFRESH_EVERY_H * 3600
     old_format = have_all and state.get("schema") != SCHEMA
+    retries = (state or {}).get("retries", 0)
+    retry = bool(state and state.get("partial")) and retries < 3 and now - last > REFRESH_EVERY_H * 3600   # max. 3 reintentos
     reason = ("forzado a mano" if FORCE else "sin datos previos" if not have_all else
-              "formato nuevo" if old_format else "parche nuevo" if changed else
+              "formato nuevo" if old_format else "parche nuevo" if changed else "reintento" if retry else
               "refresco tras parche" if window else None)
-    wiki_due = bool(FORCE or not have_all or old_format or changed)
+    wiki_due = bool(FORCE or not have_all or old_format or changed or retry)
     if reason:
         try:
             raw, diag = ships(where)
+            files, partial = {}, []
             if wiki_due:
+                def block(name, fn, key):
+                    try:
+                        files[name], diag[key] = fn()
+                    except Exception as e:                    # un bloque que falla no tumba a los demas
+                        print(f"{name} no disponible: {e}", file=sys.stderr)
+                        files[name] = old.get(name) or {"error": str(e)}
+                        diag[key] = {"error": str(e)}
+                        partial.append(name)
                 try:
                     by_uuid, need, wdiag = wiki_ships()
-                except Exception as e:                       # sin la wiki, las naves siguen funcionando con UEX
-                    print("Wiki no disponible:", e, file=sys.stderr)
-                    by_uuid, need, wdiag = {}, set(), {"error": str(e)}
-                matched, approx, mdiag = match_ships(raw["vehicles"], by_uuid)
-                if by_uuid:
+                    matched, approx, mdiag = match_ships(raw["vehicles"], by_uuid)
                     wiki_details(by_uuid, need & set(matched.values()), wdiag)
-                try:
-                    catalog, idiag = wiki_items() if by_uuid else ({}, {"error": "sin wiki"})
+                    files["shipdata.json"] = {"generated_at": iso(now), "ships": {u: by_uuid[u] for u in set(matched.values())}}
+                    diag["wiki"] = dict(wdiag, **mdiag)
                 except Exception as e:
-                    print("Catalogo de piezas no disponible:", e, file=sys.stderr)
-                    catalog, idiag = {}, {"error": str(e)}
-                detail = {"generated_at": iso(now), "ships": {u: by_uuid[u] for u in set(matched.values())}}
-                items = {"generated_at": iso(now), "types": catalog}
-            else:                                            # solo UEX: se reutiliza lo ya descargado de la wiki
-                by_uuid, wdiag = old_detail.get("ships", {}), {"reused": True}
-                matched, approx, mdiag = match_ships(raw["vehicles"], by_uuid)
-                detail, items = old_detail, old_items
-                idiag = (state.get("diag") or {}).get("items")
-            diag["wiki"], diag["items"] = dict(wdiag, **mdiag), idiag
+                    print("Wiki de naves no disponible:", e, file=sys.stderr)
+                    files["shipdata.json"] = old.get("shipdata.json") or {"ships": {}, "error": str(e)}
+                    matched, approx, mdiag = match_ships(raw["vehicles"], files["shipdata.json"].get("ships", {}))
+                    diag["wiki"] = {"error": str(e)}
+                    partial.append("shipdata.json")
+                block("items.json", lambda: (lambda c, d: ({"generated_at": iso(now), "types": c}, d))(*wiki_items()), "items")
+                block("blueprints.json", wiki_blueprints, "blueprints")
+                block("missions.json", wiki_missions, "missions")
+                block("mining.json", wiki_mining, "mining")
+            else:                                             # solo UEX: se reutiliza lo ya descargado de la wiki
+                files = dict(old)
+                matched, approx, mdiag = match_ships(raw["vehicles"], old["shipdata.json"].get("ships", {}))
+                for k in ("wiki", "items", "blueprints", "missions", "mining"):
+                    if (state.get("diag") or {}).get(k) is not None:
+                        diag[k] = state["diag"][k]
+                partial = list(state.get("partial") or [])
             ship_data = normalize_ships(raw, where, now, lambda v: matched.get(v.get("id")), approx)
             wiki_time = now if wiki_due else state.get("wiki_fetched_at", now)
-            return ship_data, detail, items, {"version": live, "first_seen": first_seen, "fetched_at": now,
-                                              "wiki_fetched_at": wiki_time, "schema": SCHEMA, "diag": diag}, reason
+            return ship_data, files, {"version": live, "first_seen": first_seen, "fetched_at": now,
+                                      "wiki_fetched_at": wiki_time, "schema": SCHEMA, "partial": partial,
+                                      "retries": retries + 1 if reason == "reintento" else (retries if not wiki_due else 0), "diag": diag}, reason
         except (SystemExit, Exception) as e:
             print("No se pudieron refrescar las naves:", e, file=sys.stderr)
             if not have_all:
-                return {"generated_at": None, "ships": []}, {"ships": {}}, {"types": {}}, {"version": live}, "error"
-    return old_ships, old_detail, old_items, state, None
+                return {"generated_at": None, "ships": []}, {n: {"error": "sin datos"} for n in WIKI_FILES}, {"version": live}, "error"
+    return old_ships, old, state, None
 
 
 def main():
@@ -618,7 +718,7 @@ def main():
         where = locate(fetch("terminals", tries=2))
     except SystemExit:
         where = {}
-    ship_data, detail, items, state, reason = static_data(live, now, where)   # naves: solo con parche nuevo
+    ship_data, wiki_files, state, reason = static_data(live, now, where)   # naves: solo con parche nuevo
     data, meta = build(fetch("commodities_prices_all"), where)         # precios: SIEMPRE
     meta["game_versions"] = gv
     meta["static_diag"] = {"version": live, "ships_refreshed": reason, "fetched_at": iso(state.get("fetched_at")),
@@ -631,12 +731,8 @@ def main():
         (OUT / "guides.json").write_text(json.dumps(found, ensure_ascii=False), encoding="utf-8")
     except Exception as e:
         print("Guias no generadas:", e, file=sys.stderr)
-    old_probe = prev_json("probe.json") or {}
-    probe = dict(old_probe, **wiki_probe()) if PROBE else old_probe     # persiste y acumula entre ejecuciones
-    files = [("commodities.json", data), ("meta.json", meta), ("ships.json", ship_data),
-             ("shipdata.json", detail), ("items.json", items), ("static.json", state)]
-    if probe:
-        files.append(("probe.json", probe))
+    files = [("commodities.json", data), ("meta.json", meta), ("ships.json", ship_data), ("static.json", state)]
+    files += list(wiki_files.items())
     for name, obj in files:
         tmp = OUT / (name + ".tmp")
         tmp.write_text(json.dumps(obj, ensure_ascii=False), encoding="utf-8")
