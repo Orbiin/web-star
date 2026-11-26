@@ -13,6 +13,7 @@ body{margin:0;background:radial-gradient(circle at 80% 0,rgba(122,77,255,.12),tr
 .wrap{max-width:1240px;margin:0 auto;padding:20px}
 .top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--cy);box-shadow:0 8px 20px -14px var(--cy)}
 .logo{font-size:20px;font-weight:700;letter-spacing:.14em;color:var(--cy);text-shadow:0 0 14px var(--cy)}
+#nav{display:contents}
 .nl{padding:8px 14px;border:1px solid var(--line);border-radius:6px;color:#b7c9d6;text-decoration:none;font-size:14px}
 .nl.on{border-color:var(--cy);color:var(--cy);background:rgba(63,214,232,.12)}
 .info{margin-left:auto;font-size:13px;color:var(--mut)}
@@ -60,10 +61,11 @@ a{color:var(--cy)}
 .tile{flex:1 1 160px;padding:10px 12px;background:#0b141c;border:1px solid #1f3a4a;border-left:3px solid var(--cy);border-radius:4px}
 .tile span{display:block;font:11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
 </style>
+<script src="nav.js" defer></script>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><span class="logo">SC HUB</span><a class="nl" href="./">Inicio</a><a class="nl" href="comercio.html">Comercio</a><a class="nl" href="naves.html">Naves</a><a class="nl on" href="eventos.html">Eventos</a><span class="info" id="info"></span></div>
+<div class="top"><span class="logo">SC HUB</span><span id="nav"></span><span class="info" id="info"></span></div>
 <h1>Eventos</h1>
 <p class="sub">Guías paso a paso escritas por la comunidad.</p>
 <div class="filters">
